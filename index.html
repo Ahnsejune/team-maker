@@ -2494,6 +2494,307 @@
       .guide-section { padding: 60px 0; }
     }
 
+    /* ============================================
+       오시는길 (LOCATION) SECTION
+       ============================================ */
+    .location-section {
+      position: relative;
+      background-color: #06070a;
+      color: #fff;
+      padding: 110px 0;
+      overflow: hidden;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .location-glow {
+      position: absolute;
+      left: -120px;
+      top: -80px;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background-color: rgba(216, 255, 79, 0.10);
+      filter: blur(130px);
+      pointer-events: none;
+    }
+
+    .location-header {
+      margin-bottom: 28px;
+    }
+
+    /* 주소 안내 박스 */
+    .location-address-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px 24px;
+      max-width: 760px;
+      margin: 0 auto 56px;
+      padding: 22px 28px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+    }
+
+    .location-address-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .location-address-text svg {
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+
+    .location-map-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      background-color: var(--accent);
+      color: #06070a;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .location-map-btn:hover {
+      background-color: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    /* ── 경로 선택 탭 (건물 앞쪽 / 뒷쪽) ── */
+    .location-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+
+    .loc-tab-btn {
+      padding: 12px 24px;
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .loc-tab-btn:hover {
+      color: #fff;
+      border-color: rgba(216, 255, 79, 0.4);
+    }
+
+    .loc-tab-btn.active {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #06070a;
+    }
+
+    /* ── 슬라이더 ── */
+    .location-slider {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .loc-viewport {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      border-radius: 24px;
+    }
+
+    .loc-track {
+      display: flex;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .loc-slide {
+      flex: 0 0 100%;
+      min-width: 100%;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    /* 좌우 화살표 버튼 */
+    .loc-arrow {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .loc-arrow:hover:not(:disabled) {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #06070a;
+      transform: scale(1.08);
+    }
+
+    .loc-arrow:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* 하단 컨트롤 (점 + 카운터) */
+    .loc-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .loc-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .loc-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.2);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .loc-dot.active {
+      width: 26px;
+      border-radius: 999px;
+      background-color: var(--accent);
+    }
+
+    .loc-counter {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .loc-counter .loc-cur { color: var(--accent); }
+
+    /* 이미지 영역 (사진 들어가기 전 플레이스홀더 포함) */
+    .location-step-imgwrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background-color: rgba(255, 255, 255, 0.04);
+      background-image: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .location-step-imgwrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* 이미지 로드 전/실패 시 보이는 안내 텍스트 */
+    .location-img-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      pointer-events: none;
+    }
+    .location-step-imgwrap img[src]:not([src=""]) + .location-img-placeholder {
+      opacity: 0; /* 사진이 있으면 안내 텍스트 숨김 (정상 로드 시) */
+    }
+
+    .location-step-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background-color: var(--accent);
+      color: #06070a;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      border-radius: 999px;
+    }
+
+    .location-step-body {
+      padding: 20px 22px 24px;
+    }
+
+    .location-step-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .location-step-desc {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    /* 반응형 */
+    @media (max-width: 1024px) {
+      .location-section { padding: 88px 0; }
+    }
+    @media (max-width: 768px) {
+      .location-address-box { flex-direction: column; gap: 16px; text-align: center; }
+      .location-address-text { font-size: 15px; }
+      .location-section { padding: 72px 0; }
+      .loc-tab-btn { font-size: 14px; padding: 11px 18px; }
+      .loc-arrow { width: 42px; height: 42px; }
+      .location-slider { gap: 10px; }
+    }
+    @media (max-width: 560px) {
+      .location-step-title { font-size: 16px; }
+      .location-section { padding: 60px 0; }
+      .location-tabs { gap: 8px; }
+      .loc-tab-btn { width: 100%; }
+    }
 
   </style>
 </head>
@@ -2537,6 +2838,7 @@
         <a href="#price" class="nav-link">가격표</a>
         <a href="#position" class="nav-link">위치 안내</a>
         <a href="#guide" class="nav-link">안내</a>
+        <a href="#location" class="nav-link">오시는길</a>
       </div>
       <a href="http://pf.kakao.com/_gbbxjX/chat" target="_blank" rel="noopener noreferrer" class="nav-cta" aria-label="카카오톡으로 바로 주문하기">
         바로 주문하기
@@ -3330,7 +3632,237 @@
     </div>
   </section>
 
-  <!-- 8. PREMIUM FOOTER (더큐알 회사 정보 매칭) -->
+  <!-- 8. 오시는길 (LOCATION) SECTION -->
+  <section id="location" class="location-section">
+    <div class="location-glow"></div>
+    <div class="container">
+      <div class="text-center location-header fade-up">
+        <p class="section-label dark-theme">Location</p>
+        <h2 class="section-title">팀메이커까지<br>오시는길.</h2>
+      </div>
+
+      <!-- 주소 + 길찾기 버튼 -->
+      <div class="location-address-box fade-up delay-100">
+        <span class="location-address-text">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          경상남도 통영시 광도면 죽림해안로 66, 4층 (성원빌딩)
+        </span>
+        <a class="location-map-btn"
+           href="https://map.naver.com/p/search/경상남도 통영시 광도면 죽림해안로 66"
+           target="_blank" rel="noopener noreferrer" aria-label="네이버 지도로 길찾기">
+          지도로 길찾기
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+
+      <!-- 사진 파일 안내: 같은 폴더에 front_01~front_05.png (건물 앞쪽), back_01~back_05.png (건물 뒷쪽) 을 넣으면 자동 표시됩니다 -->
+
+      <!-- 경로 선택 탭 -->
+      <div class="location-tabs fade-up delay-100">
+        <button type="button" class="loc-tab-btn active" data-route="front" onclick="switchRoute('front')">🏢 건물 앞쪽으로 오시는 경우</button>
+        <button type="button" class="loc-tab-btn" data-route="back" onclick="switchRoute('back')">🚗 건물 뒷쪽으로 오시는 경우</button>
+      </div>
+
+      <!-- 슬라이더 -->
+      <div class="location-slider fade-up delay-200">
+        <button type="button" class="loc-arrow loc-prev" onclick="moveSlide(-1)" aria-label="이전 사진">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <div class="loc-viewport">
+          <!-- 건물 앞쪽 트랙 -->
+          <div class="loc-track" data-route="front">
+          <!-- FRONT 1/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 01</span>
+              <img src="front_01_01.jpg" alt="건물 앞쪽 오시는길 1번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>front_01.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">1. 바닷가를 오른쪽에 두고 상가 방향으로 걸어와 주세요.</h3>
+            </div>
+          </div>
+          <!-- FRONT 2/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 02</span>
+              <img src="front_02_01.jpg" alt="건물 앞쪽 오시는길 2번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>front_02.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">2. 스시 하루가를 지나 조금 더 걸어오시면 티스테이션이 보입니다.</h3>
+            </div>
+          </div>
+          <!-- FRONT 3/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 03</span>
+              <img src="front_03_01.jpg" alt="건물 앞쪽 오시는길 3번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>front_03.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">3. 티스테이션 바로 옆 성원빌딩 입구로 들어와 주세요.</h3>
+            </div>
+          </div>
+          <!-- FRONT 4/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 04</span>
+              <img src="front_04_01.jpg" alt="건물 앞쪽 오시는길 4번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>front_04.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">4. 건물 내부 엘리베이터를 이용해 주세요.</h3>
+            </div>
+          </div>
+          <!-- FRONT 5/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 05</span>
+              <img src="contact_common_01_01.jpg" alt="건물 앞쪽 오시는길 5번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>front_05.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">5. 4층으로 올라오시면 됩니다.</h3>
+            </div>
+          </div>
+          <!-- FRONT 6/6 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 06</span>
+              <img src="contact_common_02_01.jpg" alt="건물 앞쪽 오시는길 6번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>front_05.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">6. 안내된 사물함에 옷을 넣어주시거나 수거해 주시면 됩니다.</h3>
+            </div>
+          </div>
+          </div>
+          <!-- 건물 뒷쪽 트랙 -->
+          <div class="loc-track" data-route="back" style="display:none;">
+          <!-- BACK 1/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 01</span>
+              <img src="back_01_01.jpg" alt="건물 뒷쪽 오시는길 1번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>back_01.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">1. 쿠우쿠우와 호텔스테이 사이 길로 들어오시면 더큐알 건물이 보입니다.</h3>
+            </div>
+          </div>
+          <!-- BACK 2/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 02</span>
+              <img src="back_02_01.jpg" alt="건물 뒷쪽 오시는길 2번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>back_02.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">2. 건물 후문 입구 위치는 안내 이미지를 참고해 주세요.</h3>
+            </div>
+          </div>
+          <!-- BACK 3/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 03</span>
+              <img src="back_03_01.jpg" alt="건물 뒷쪽 오시는길 3번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>back_03.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">3. 이미지와 같이 보이는 건물 입구로 들어오시면 됩니다.</h3>
+            </div>
+          </div>
+          <!-- BACK 4/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 04</span>
+              <img src="back_04_01.jpg" alt="건물 뒷쪽 오시는길 4번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>back_04.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">4. 건물 내부 엘리베이터를 이용해 주세요.</h3>
+            </div>
+          </div>
+          <!-- BACK 5/5 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 05</span>
+              <img src="contact_common_01_01.jpg" alt="건물 뒷쪽 오시는길 5번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>back_05.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">5. 4층으로 올라오시면 됩니다.</h3>
+            </div>
+          </div>
+          <!-- BACK 6/6 -->
+          <div class="loc-slide">
+            <div class="location-step-imgwrap">
+              <span class="location-step-badge">STEP 05</span>
+              <img src="contact_common_02_01.jpg" alt="건물 뒷쪽 오시는길 6번째 사진" loading="lazy" onerror="this.style.display='none';">
+              <div class="location-img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>back_05.png</span>
+              </div>
+            </div>
+            <div class="location-step-body">
+              <h3 class="location-step-title">6. 안내된 사물함에 옷을 넣어주시거나 수거해 주시면 됩니다.</h3>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <button type="button" class="loc-arrow loc-next" onclick="moveSlide(1)" aria-label="다음 사진">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- 하단 컨트롤 -->
+      <div class="loc-controls fade-up delay-300">
+        <div class="loc-dots" id="locDots"></div>
+        <div class="loc-counter"><span class="loc-cur" id="locCur">1</span> / <span id="locTotal">5</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. PREMIUM FOOTER (더큐알 회사 정보 매칭) -->
   <footer class="premium-footer">
     <div class="container footer-content">
       <div class="footer-brand">
@@ -3348,6 +3880,7 @@
           <a href="#event">체험단 신청</a>
           <a href="#price">가격 정보</a>
           <a href="#guide">이용 안내</a>
+          <a href="#location">오시는길</a>
         </div>
         <div class="footer-company-info">
           <span><strong>통합 고객 지원:</strong> teammaker_kr@naver.com</span>
@@ -3630,6 +4163,108 @@
         mockupCard.style.transform = `rotateY(0deg) rotateX(0deg)`;
       });
     }
+
+    /* ============================================
+       오시는길 슬라이더 (건물 앞쪽 / 뒷쪽 경로)
+       ============================================ */
+    let locRoute = 'front';
+    let locIndex = 0;
+
+    function locActiveTrack() {
+      return document.querySelector('.loc-track[data-route="' + locRoute + '"]');
+    }
+    function locSlideCount() {
+      const t = locActiveTrack();
+      return t ? t.querySelectorAll('.loc-slide').length : 0;
+    }
+
+    function locRenderDots() {
+      const dotsWrap = document.getElementById('locDots');
+      if (!dotsWrap) return;
+      const count = locSlideCount();
+      dotsWrap.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'loc-dot' + (i === locIndex ? ' active' : '');
+        b.setAttribute('aria-label', (i + 1) + '번째 사진으로 이동');
+        b.onclick = () => goToSlide(i);
+        dotsWrap.appendChild(b);
+      }
+    }
+
+    function locUpdate() {
+      const track = locActiveTrack();
+      if (!track) return;
+      const count = locSlideCount();
+      if (locIndex < 0) locIndex = 0;
+      if (locIndex > count - 1) locIndex = count - 1;
+
+      track.style.transform = 'translateX(' + (-locIndex * 100) + '%)';
+
+      // 점 활성화
+      const dots = document.querySelectorAll('#locDots .loc-dot');
+      dots.forEach((d, i) => d.classList.toggle('active', i === locIndex));
+
+      // 카운터
+      const cur = document.getElementById('locCur');
+      const total = document.getElementById('locTotal');
+      if (cur) cur.textContent = (locIndex + 1);
+      if (total) total.textContent = count;
+
+      // 화살표 비활성화 (양 끝)
+      const prev = document.querySelector('.loc-prev');
+      const next = document.querySelector('.loc-next');
+      if (prev) prev.disabled = (locIndex === 0);
+      if (next) next.disabled = (locIndex === count - 1);
+    }
+
+    function moveSlide(dir) {
+      locIndex += dir;
+      locUpdate();
+    }
+
+    function goToSlide(i) {
+      locIndex = i;
+      locUpdate();
+    }
+
+    function switchRoute(route) {
+      if (route === locRoute) return;
+      locRoute = route;
+      locIndex = 0;
+      // 트랙 표시 전환
+      document.querySelectorAll('.loc-track').forEach(t => {
+        t.style.display = (t.getAttribute('data-route') === route) ? 'flex' : 'none';
+      });
+      // 탭 버튼 활성화
+      document.querySelectorAll('.loc-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-route') === route);
+      });
+      locRenderDots();
+      locUpdate();
+    }
+
+    // 슬라이더 초기화 + 터치 스와이프
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!document.getElementById('locDots')) return;
+      locRenderDots();
+      locUpdate();
+
+      const viewport = document.querySelector('.loc-viewport');
+      if (viewport) {
+        let startX = 0, swiping = false;
+        viewport.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX; swiping = true;
+        }, { passive: true });
+        viewport.addEventListener('touchend', (e) => {
+          if (!swiping) return;
+          swiping = false;
+          const diff = e.changedTouches[0].clientX - startX;
+          if (Math.abs(diff) > 45) moveSlide(diff < 0 ? 1 : -1);
+        }, { passive: true });
+      }
+    });
   </script>
 </body>
 </html>
