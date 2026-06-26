@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DTF 전사용 문구를 실제 크기로 확인하고 의류 목업과 고해상도 PNG 시안을 만드는 도구" />
+  <title>DTF 실제 크기 시안 제작 도구</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Black+Han+Sans&family=Do+Hyeon&family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Jua&family=Lobster&family=Montserrat:wght@400;500;600;700;800&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@400;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Pacifico&family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Roboto+Slab:wght@400;600;700&family=Song+Myung&display=swap');
+
+:root {
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --surface-soft: #f7f9fc;
+  --surface-blue: #eff5ff;
+  --line: #dde3eb;
+  --line-strong: #c7d0dc;
+  --text: #101828;
+  --muted: #667085;
+  --primary: #2557d6;
+  --primary-dark: #1743b3;
+  --primary-soft: #eaf1ff;
+  --danger: #d92d20;
+  --warning: #b54708;
+  --success: #067647;
+  --ruler-size: 40px;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --shadow: 0 18px 55px rgba(16, 24, 40, 0.08);
+  --px-per-cm: 37.7952755906px;
+  --view-scale: 1;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 5% 0%, rgba(37, 87, 214, 0.09), transparent 28%),
+    radial-gradient(circle at 100% 40%, rgba(16, 185, 129, 0.05), transparent 24%),
+    var(--bg);
+  font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid rgba(37, 87, 214, 0.22);
+  outline-offset: 2px;
+}
+[hidden] { display: none !important; }
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px clamp(16px, 3vw, 46px);
+  border-bottom: 1px solid rgba(199, 208, 220, 0.78);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+}
+.brand-wrap { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.brand-mark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(145deg, #101828, #344054);
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.18);
+}
+.eyebrow {
+  margin: 0 0 3px;
+  color: var(--primary);
+  font-family: "Montserrat", sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+h1, h2, h3, p { margin-top: 0; }
+.site-header h1 { margin-bottom: 0; font-size: clamp(17px, 2vw, 23px); line-height: 1.25; }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+.btn {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 750;
+  transition: 0.18s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { color: #fff; background: var(--primary); box-shadow: 0 7px 16px rgba(37, 87, 214, 0.18); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-dark { color: #fff; background: var(--text); }
+.btn-ghost { border-color: var(--line-strong); color: #344054; background: #fff; }
+.btn-soft { color: var(--primary); background: var(--primary-soft); }
+.btn-danger { color: var(--danger); border-color: #f4b8b3; background: #fff; }
+.btn-icon { width: 40px; padding: 0; font-size: 17px; }
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(350px, 420px) minmax(0, 1fr);
+  gap: 18px;
+  width: min(1880px, calc(100% - 28px));
+  margin: 18px auto 40px;
+}
+.control-panel, .preview-panel {
+  border: 1px solid rgba(199, 208, 220, 0.82);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.control-panel { align-self: start; overflow: hidden; }
+.panel-section { padding: 20px; border-bottom: 1px solid var(--line); }
+.section-heading { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 14px; }
+.step {
+  display: inline-flex;
+  min-width: 33px;
+  height: 25px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-family: "Montserrat", sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+}
+.section-heading h2 { margin: 0 0 3px; font-size: 15px; }
+.section-heading p, .helper, .status-card p, .license-note p, .modal-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+textarea, select, .text-input, .number-box, .color-control, .search-box {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  color: var(--text);
+  background: #fff;
+}
+textarea {
+  display: block;
+  min-height: 90px;
+  padding: 12px 13px;
+  resize: vertical;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.input-meta { display: flex; justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: 10px; }
+.field-group { margin-bottom: 13px; }
+.field-group:last-child { margin-bottom: 0; }
+.field-label, .range-field > span b, .control-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-soft);
+}
+.segmented.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.segmented.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.segment {
+  min-height: 37px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 800;
+}
+.segment.is-active { color: var(--primary); background: #fff; box-shadow: 0 3px 11px rgba(16, 24, 40, 0.08); }
+
+.search-box { display: flex; align-items: center; gap: 8px; height: 39px; margin-top: 10px; padding: 0 11px; }
+.search-box span { color: #98a2b3; }
+.search-box input { width: 100%; border: 0; outline: 0; background: transparent; font-size: 12px; }
+.font-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  max-height: 285px;
+  margin-top: 10px;
+  padding-right: 3px;
+  overflow-y: auto;
+}
+.font-card {
+  min-width: 0;
+  min-height: 63px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  text-align: left;
+  background: #fff;
+  transition: 0.16s ease;
+}
+.font-card:hover { border-color: #98b2ef; transform: translateY(-1px); }
+.font-card.is-active { border-color: var(--primary); background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--primary); }
+.font-card strong { display: block; overflow: hidden; margin-bottom: 3px; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.font-card span { display: block; overflow: hidden; color: var(--muted); font-family: "Montserrat", sans-serif; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.empty-font { grid-column: 1 / -1; padding: 18px; color: var(--muted); text-align: center; font-size: 12px; }
+
+.preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+.size-preset {
+  min-height: 39px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: #344054;
+  background: #fff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+}
+.size-preset.is-active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.inline-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.inline-controls.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.number-box, .color-control { display: flex; height: 41px; align-items: center; }
+.number-box { padding: 0 10px; }
+.number-box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; text-align: right; font-family: "Montserrat", sans-serif; font-weight: 750; }
+.number-box span { margin-left: 6px; color: var(--muted); font-size: 11px; }
+.color-control { gap: 8px; padding: 5px 8px; }
+.color-control input[type="color"] { width: 29px; height: 27px; flex: 0 0 auto; padding: 0; overflow: hidden; border: 0; border-radius: 6px; background: transparent; }
+.color-control code { min-width: 0; overflow: hidden; color: #344054; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+select { height: 41px; padding: 0 10px; font-size: 11px; }
+.range { width: 100%; margin: 9px 0 0; accent-color: var(--primary); }
+.range-field { display: block; margin-top: 12px; }
+.range-field > span { display: flex; align-items: center; justify-content: space-between; }
+.range-field > span b { margin: 0; }
+.range-field output { color: var(--primary); font-family: "Montserrat", sans-serif; font-size: 10px; font-weight: 800; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.toggle-row > div b { display: block; margin-bottom: 2px; color: #344054; font-size: 11px; }
+.toggle-row > div span { display: block; color: var(--muted); font-size: 10px; }
+.switch { position: relative; display: inline-flex; width: 42px; height: 24px; flex: 0 0 auto; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch i { width: 100%; border-radius: 999px; background: #d0d5dd; transition: .2s ease; }
+.switch i::after { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(16,24,40,.2); content: ""; transition: .2s ease; }
+.switch input:checked + i { background: var(--primary); }
+.switch input:checked + i::after { transform: translateX(18px); }
+
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 13px; }
+.action-grid .btn { width: 100%; }
+.export-info { margin-top: 12px; padding: 11px 12px; border: 1px solid #cfe0ff; border-radius: 11px; background: #f5f8ff; color: #344054; font-size: 10px; line-height: 1.55; }
+.export-info b { color: var(--primary); }
+.status-card { margin: 14px; padding: 13px 14px; border: 1px solid #f0d7a6; border-radius: 13px; background: #fffbf2; }
+.status-card > div { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 11px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #f79009; box-shadow: 0 0 0 4px rgba(247,144,9,.13); }
+.status-dot.is-calibrated { background: #12b76a; box-shadow: 0 0 0 4px rgba(18,183,106,.13); }
+
+.preview-panel { min-width: 0; overflow: hidden; }
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 22px 15px;
+}
+.preview-toolbar h2 { margin: 0; font-size: 18px; }
+.toolbar-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.zoom-value { min-width: 54px; color: #344054; text-align: center; font-family: "Montserrat", sans-serif; font-size: 11px; font-weight: 800; }
+.notice-strip {
+  display: flex;
+  gap: 10px;
+  margin: 0 22px 13px;
+  padding: 10px 12px;
+  border: 1px solid #cfe0ff;
+  border-radius: 12px;
+  color: #344054;
+  background: #f4f8ff;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.notice-strip strong { flex: 0 0 auto; color: var(--primary); }
+.notice-strip.is-warning { border-color: #fedf89; background: #fffaeb; }
+.notice-strip.is-warning strong { color: var(--warning); }
+.measurement-summary {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(4, 1fr);
+  gap: 1px;
+  margin: 0 22px 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--line);
+}
+.measurement-summary > div { min-width: 0; padding: 11px 12px; background: #fff; }
+.measurement-summary span { display: block; margin-bottom: 3px; color: var(--muted); font-size: 9px; }
+.measurement-summary b { display: block; overflow: hidden; font-family: "Montserrat", "Noto Sans KR", sans-serif; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.measurement-summary em { font-style: normal; }
+
+.workbench-scroll {
+  position: relative;
+  width: calc(100% - 44px);
+  height: min(66vh, 690px);
+  min-height: 470px;
+  margin: 0 22px;
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: #e5eaf0;
+  overscroll-behavior: contain;
+}
+.workbench {
+  display: grid;
+  grid-template-columns: var(--ruler-size) auto;
+  grid-template-rows: var(--ruler-size) auto;
+  width: max-content;
+  min-width: 100%;
+  min-height: 100%;
+}
+.corner-cell {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+  place-items: center;
+  border-right: 1px solid #aab4c0;
+  border-bottom: 1px solid #aab4c0;
+  color: #667085;
+  background: #dce2e9;
+  font-family: "Montserrat", sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+}
+.ruler {
+  position: sticky;
+  z-index: 10;
+  color: #667085;
+  background: #edf0f4;
+  font-family: "Montserrat", sans-serif;
+  font-size: 8px;
+  user-select: none;
+}
+.ruler-horizontal { top: 0; grid-column: 2; grid-row: 1; height: var(--ruler-size); border-bottom: 1px solid #aab4c0; }
+.ruler-vertical { left: 0; grid-column: 1; grid-row: 2; width: var(--ruler-size); border-right: 1px solid #aab4c0; }
+.ruler-mark { position: absolute; }
+.ruler-horizontal .ruler-mark { bottom: 0; width: 1px; height: 10px; border-left: 1px solid #7f8a99; }
+.ruler-horizontal .ruler-mark.half { height: 6px; border-color: #b2bbc6; }
+.ruler-horizontal .ruler-mark.tenth { height: 3px; border-color: #cdd3db; }
+.ruler-horizontal .ruler-mark span { position: absolute; top: -17px; left: 3px; }
+.ruler-vertical .ruler-mark { right: 0; width: 10px; height: 1px; border-top: 1px solid #7f8a99; }
+.ruler-vertical .ruler-mark.half { width: 6px; border-color: #b2bbc6; }
+.ruler-vertical .ruler-mark.tenth { width: 3px; border-color: #cdd3db; }
+.ruler-vertical .ruler-mark span { position: absolute; top: 2px; right: 13px; }
+.stage-wrap {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  min-width: calc(100vw - 560px);
+  min-height: calc(min(66vh, 690px) - var(--ruler-size));
+  place-items: center;
+  padding: 38px;
+}
+.stage-svg {
+  display: block;
+  flex: 0 0 auto;
+  overflow: visible;
+  background: #fff;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.14);
+  user-select: none;
+  touch-action: none;
+}
+#designHitArea { cursor: grab; }
+#designHitArea.is-dragging { cursor: grabbing; }
+.license-note { display: flex; gap: 12px; margin: 14px 22px 22px; padding: 13px 14px; border-radius: 12px; background: var(--surface-soft); }
+.license-note b { flex: 0 0 auto; font-size: 11px; }
+.license-note p { font-size: 11px; }
+
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 200;
+  max-width: min(360px, calc(100% - 44px));
+  padding: 12px 15px;
+  border-radius: 12px;
+  color: #fff;
+  background: #101828;
+  box-shadow: 0 16px 40px rgba(16,24,40,.25);
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: .22s ease;
+}
+.toast.is-show { opacity: 1; transform: translateY(0); }
+.toast.is-error { background: #b42318; }
+
+.modal { position: fixed; inset: 0; z-index: 150; display: none; align-items: center; justify-content: center; padding: 18px; }
+.modal.is-open { display: flex; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,.64); backdrop-filter: blur(6px); }
+.modal-card { position: relative; z-index: 1; width: min(600px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; padding: 27px; border-radius: 20px; background: #fff; box-shadow: 0 28px 80px rgba(15,23,42,.3); }
+.modal-card h2 { margin-bottom: 0; font-size: 20px; }
+.modal-close { position: absolute; top: 15px; right: 15px; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 9px; color: #475467; background: #fff; font-size: 21px; line-height: 1; }
+.modal-intro { margin-top: 8px; }
+.calibration-stage { display: grid; min-height: 225px; margin: 20px 0 16px; overflow: auto; place-items: center; border: 1px dashed #b7c3d4; border-radius: 16px; background: repeating-conic-gradient(rgba(148,163,184,.08) 0 25%, transparent 0 50%) 50% / 16px 16px, #f8fafc; }
+.credit-card { display: flex; width: 323.53px; height: 204.02px; flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--primary); border-radius: 15px; color: var(--primary); background: linear-gradient(135deg,#fff,#edf4ff); box-shadow: 0 10px 30px rgba(37,87,214,.12); font-family: "Montserrat", sans-serif; font-weight: 800; }
+.credit-card small { margin-top: 5px; color: #64748b; font-size: 9px; font-weight: 650; }
+.calibration-controls { display: grid; grid-template-columns: 40px 1fr 40px; gap: 9px; align-items: center; }
+.calibration-controls input { width: 100%; accent-color: var(--primary); }
+.nudge-btn { width: 40px; height: 40px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; font-size: 19px; }
+.calibration-value { margin-top: 7px; color: var(--primary); text-align: center; font-family: "Montserrat", sans-serif; }
+.calibration-steps { margin: 18px 0 0; padding-left: 19px; color: #475467; font-size: 11px; line-height: 1.75; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 20px; }
+
+@media (max-width: 1180px) {
+  .app-shell { grid-template-columns: 350px minmax(0,1fr); width: calc(100% - 20px); gap: 10px; }
+  .measurement-summary { grid-template-columns: repeat(3, 1fr); }
+  .stage-wrap { min-width: 700px; }
+}
+@media (max-width: 900px) {
+  .site-header { position: static; }
+  .app-shell { grid-template-columns: 1fr; width: min(100% - 18px, 800px); margin-top: 10px; }
+  .font-grid { max-height: none; }
+  .workbench-scroll { height: 560px; }
+  .stage-wrap { min-width: 700px; min-height: 520px; }
+}
+@media (max-width: 600px) {
+  .site-header { align-items: flex-start; padding: 12px; }
+  .brand-mark { width: 42px; height: 42px; }
+  .eyebrow { display: none; }
+  .site-header h1 { font-size: 15px; }
+  .header-actions .btn:not(.btn-primary) { display: none; }
+  .panel-section { padding: 17px; }
+  .preview-toolbar { align-items: flex-start; padding: 17px 14px 12px; }
+  .preview-toolbar h2 { font-size: 16px; }
+  .toolbar-actions { max-width: 190px; }
+  .notice-strip, .measurement-summary, .workbench-scroll, .license-note { margin-right: 14px; margin-left: 14px; }
+  .workbench-scroll { width: calc(100% - 28px); min-height: 440px; }
+  .measurement-summary { grid-template-columns: 1fr 1fr; }
+  .inline-controls, .inline-controls.cols-3 { grid-template-columns: 1fr; }
+  .action-grid { grid-template-columns: 1fr; }
+  .modal-card { padding: 23px 16px; }
+}
+
+/* 사용자 친화형 압축 패널 */
+.app-shell { grid-template-columns: 330px minmax(0, 1fr); align-items: start; }
+.compact-control-panel { position: sticky; top: 82px; display: flex; max-height: calc(100vh - 100px); flex-direction: column; overflow: hidden; }
+.panel-tab-nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 8px; border-bottom: 1px solid var(--line); background: #f8fafc; }
+.panel-tab { display: flex; min-width: 0; min-height: 42px; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 10px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 800; }
+.panel-tab span { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: #e9edf4; font-family: "Montserrat", sans-serif; font-size: 8px; }
+.panel-tab.is-active { color: var(--primary); background: #fff; box-shadow: 0 3px 12px rgba(16,24,40,.09); }
+.panel-tab.is-active span { color: #fff; background: var(--primary); }
+.control-panel-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; scrollbar-width: thin; }
+.control-tab-panel { padding: 16px; }
+.control-tab-panel[hidden] { display: none !important; }
+.compact-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.compact-title-row h2 { margin: 0; font-size: 16px; }
+.compact-step-hint { color: var(--muted); font-size: 9px; }
+.compact-block { margin-bottom: 14px; }
+.compact-block:last-child { margin-bottom: 0; }
+.compact-block textarea { min-height: 68px; resize: none; }
+.compact-block-head { display: flex; align-items: center; justify-content: space-between; }
+.size-live-value { color: var(--primary); font-family: "Montserrat", sans-serif; font-size: 11px; font-weight: 700; }
+.size-live-value b { font-size: 15px; }
+.compact-segmented .segment { min-height: 34px; }
+.size-control-line { display: grid; grid-template-columns: minmax(0, 1fr) 82px; gap: 7px; margin-top: 7px; }
+.size-control-line .preset-grid { margin: 0; }
+.size-control-line .size-preset { min-height: 38px; }
+.compact-number-box { height: 38px; }
+.compact-range { margin-top: 8px; }
+.font-picker-trigger { display: grid; grid-template-columns: 90px minmax(0,1fr) 18px; width: 100%; min-height: 58px; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 11px; text-align: left; background: #fff; }
+.font-picker-trigger:hover { border-color: #98b2ef; background: #f8faff; }
+.font-picker-sample { overflow: hidden; font-size: 18px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.font-picker-meta { min-width: 0; }
+.font-picker-meta b, .font-picker-meta small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.font-picker-meta b { color: #344054; font-size: 11px; }
+.font-picker-meta small { margin-top: 2px; color: var(--muted); font-size: 9px; }
+.font-picker-arrow { color: var(--primary); font-size: 23px; line-height: 1; }
+.usage-tip-card { padding: 12px; border: 1px solid #d6e4ff; border-radius: 12px; background: #f5f8ff; }
+.usage-tip-card b { color: var(--primary); font-size: 11px; }
+.usage-tip-card p { margin: 4px 0 0; color: #475467; font-size: 10px; line-height: 1.55; }
+.fixed-export-spec { display: grid; gap: 7px; margin-bottom: 14px; }
+.fixed-export-spec > div { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: #f8fafc; }
+.fixed-export-spec span { color: var(--muted); font-size: 10px; }
+.fixed-export-spec b { color: #344054; font-family: "Montserrat", sans-serif; font-size: 11px; }
+.export-action-stack { display: grid; gap: 8px; }
+.btn-large { min-height: 47px; width: 100%; }
+.export-help { margin: 12px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.compact-status-card { flex: 0 0 auto; margin: 0; padding: 11px 14px; border-top: 1px solid var(--line); background: #fffbf2; }
+.compact-status-card > div { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+.compact-status-card p { display: none; margin: 4px 0 0 16px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.font-picker-modal-card { width: min(760px, 100%); }
+.font-picker-tools { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 10px; margin-top: 18px; }
+.font-picker-tools .search-box { margin-top: 0; }
+.modal-font-grid { grid-template-columns: repeat(3, minmax(0,1fr)); max-height: min(55vh, 480px); margin-top: 12px; }
+.modal-font-grid .font-card { min-height: 72px; }
+@media (max-width: 1180px) {
+  .app-shell { grid-template-columns: 310px minmax(0,1fr); }
+}
+@media (max-width: 900px) {
+  .compact-control-panel { position: static; max-height: none; }
+  .control-panel-body { overflow: visible; }
+  .compact-status-card p { display: block; }
+}
+@media (max-width: 600px) {
+  .control-tab-panel { padding: 14px; }
+  .font-picker-tools { grid-template-columns: 1fr; }
+  .modal-font-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .font-picker-trigger { grid-template-columns: 78px minmax(0,1fr) 16px; }
+}
+
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-wrap">
+      <div class="brand-mark" aria-hidden="true">DTF</div>
+      <div>
+        <p class="eyebrow">PRINT DESIGN WORKBENCH</p>
+        <h1>실제 크기 시안 제작 도구</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost" id="loadProjectBtn">불러오기</button>
+      <button type="button" class="btn btn-ghost" id="saveProjectBtn">프로젝트 저장</button>
+      <button type="button" class="btn btn-primary" id="openCalibrationBtn">화면 크기 보정</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="control-panel compact-control-panel" aria-label="디자인 설정">
+      <nav class="panel-tab-nav" aria-label="설정 단계">
+        <button type="button" class="panel-tab is-active" data-control-tab="design" aria-selected="true"><span>01</span>디자인</button>
+        <button type="button" class="panel-tab" data-control-tab="mockup" aria-selected="false"><span>02</span>목업</button>
+        <button type="button" class="panel-tab" data-control-tab="export" aria-selected="false"><span>03</span>내보내기</button>
+      </nav>
+
+      <div class="control-panel-body">
+        <section class="control-tab-panel is-active" data-control-panel="design">
+          <div class="compact-title-row">
+            <div><p class="eyebrow">DESIGN</p><h2>문구와 크기 설정</h2></div>
+            <span class="compact-step-hint">입력 → 폰트 → 크기</span>
+          </div>
+
+          <div class="compact-block">
+            <label class="field-label" for="textInput">전사 문구</label>
+            <textarea id="textInput" rows="2" maxlength="160">통영
+TEAM MAKER</textarea>
+            <div class="input-meta"><span>줄바꿈 가능</span><span><b id="charCount">13</b>/160</span></div>
+          </div>
+
+          <div class="compact-block">
+            <span class="field-label">폰트</span>
+            <button type="button" class="font-picker-trigger" id="openFontPickerBtn">
+              <span class="font-picker-sample" id="currentFontSample">통영 TEAM</span>
+              <span class="font-picker-meta"><b id="currentFontName">Noto Sans KR</b><small>눌러서 폰트 변경</small></span>
+              <span class="font-picker-arrow">›</span>
+            </button>
+          </div>
+
+          <div class="compact-block compact-size-block">
+            <div class="compact-block-head"><span class="field-label">실제 출력 크기</span><span class="size-live-value"><b id="compactSizeValue">7</b>cm</span></div>
+            <div class="segmented compact-segmented" role="radiogroup" aria-label="크기 기준 선택">
+              <button type="button" class="segment is-active" data-size-basis="width" role="radio" aria-checked="true">가로 기준</button>
+              <button type="button" class="segment" data-size-basis="height" role="radio" aria-checked="false">세로 기준</button>
+            </div>
+            <div class="size-control-line">
+              <div class="preset-grid" aria-label="크기 빠른 선택">
+                <button type="button" class="size-preset is-active" data-size="7">7</button>
+                <button type="button" class="size-preset" data-size="10">10</button>
+                <button type="button" class="size-preset" data-size="20">20</button>
+                <button type="button" class="size-preset" data-size="30">30</button>
+              </div>
+              <div class="number-box compact-number-box"><input id="customSize" type="number" min="1" max="60" step="0.1" value="7" inputmode="decimal" /><span>cm</span></div>
+            </div>
+            <input id="sizeRange" class="range compact-range" type="range" min="1" max="60" step="0.1" value="7" aria-label="실제 크기 조절" />
+          </div>
+
+          <div class="compact-block">
+            <span class="field-label">글자 스타일</span>
+            <div class="inline-controls">
+              <label><span class="control-label">글자 색상</span><span class="color-control"><input id="textColor" type="color" value="#111827" /><code id="textColorCode">#111827</code></span></label>
+              <label><span class="control-label">글자 굵기</span><select id="fontWeight"></select></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-tab-panel" data-control-panel="mockup" hidden>
+          <div class="compact-title-row">
+            <div><p class="eyebrow">PREVIEW</p><h2>작업판과 제품 목업</h2></div>
+          </div>
+          <div class="compact-block">
+            <span class="field-label">미리보기 방식</span>
+            <div class="segmented" role="radiogroup" aria-label="보기 모드">
+              <button type="button" class="segment is-active" data-view-mode="grid" role="radio" aria-checked="true">눈금 작업판</button>
+              <button type="button" class="segment" data-view-mode="mockup" role="radio" aria-checked="false">제품 목업</button>
+            </div>
+          </div>
+          <div id="mockupControls" class="compact-block" hidden>
+            <div class="inline-controls">
+              <label><span class="control-label">제품 종류</span><select id="productType"><option value="teeFront">반팔 앞면</option><option value="teeBack">반팔 뒷면</option><option value="hoodie">후드티 앞면</option><option value="tote">에코백</option><option value="workChest">작업복 왼쪽 가슴</option><option value="workBack">작업복 등판</option></select></label>
+              <label><span class="control-label">제품 색상</span><span class="color-control"><input id="garmentColor" type="color" value="#252b37" /><code id="garmentColorCode">#252B37</code></span></label>
+            </div>
+          </div>
+          <div class="usage-tip-card">
+            <b>배치 방법</b>
+            <p>미리보기의 글자를 마우스로 끌어 이동하세요. 방향키는 1mm, Shift+방향키는 5mm씩 움직입니다.</p>
+          </div>
+        </section>
+
+        <section class="control-tab-panel" data-control-panel="export" hidden>
+          <div class="compact-title-row">
+            <div><p class="eyebrow">EXPORT</p><h2>출력 파일 만들기</h2></div>
+          </div>
+          <div class="fixed-export-spec">
+            <div><span>출력 해상도</span><b>600 DPI</b></div>
+            <div><span>투명 여백</span><b>10mm</b></div>
+            <div><span>파일 형식</span><b>투명 PNG</b></div>
+          </div>
+          <div class="export-action-stack">
+            <button type="button" class="btn btn-primary btn-large" id="downloadPngBtn">투명 PNG 저장</button>
+            <button type="button" class="btn btn-ghost btn-large" id="copySpecBtn">작업 사양 복사</button>
+          </div>
+          <div id="exportInfo" hidden></div>
+          <p class="export-help">화면 확대율이나 화면 보정값과 관계없이 설정한 실제 크기로 출력됩니다.</p>
+        </section>
+      </div>
+
+      <section class="compact-status-card">
+        <div><span class="status-dot" id="calibrationDot"></span><b id="calibrationStatus">기본 화면 배율 적용 중</b></div>
+        <p id="calibrationDescription">정확한 화면 확인이 필요하면 상단의 화면 크기 보정을 이용하세요.</p>
+      </section>
+    </aside>
+
+    <section class="preview-panel" aria-label="실제 크기 미리보기">
+      <div class="preview-toolbar">
+        <div><p class="eyebrow">LIVE DESIGN PREVIEW</p><h2 id="previewTitle">눈금 작업판</h2></div>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-icon" id="zoomOutBtn" aria-label="축소">−</button>
+          <span class="zoom-value" id="zoomValue">100%</span>
+          <button type="button" class="btn btn-ghost btn-icon" id="zoomInBtn" aria-label="확대">＋</button>
+          <button type="button" class="btn btn-ghost" id="actualSizeBtn">실제 크기</button>
+          <button type="button" class="btn btn-dark" id="fitViewBtn">화면 맞춤</button>
+        </div>
+      </div>
+
+      <div class="notice-strip" id="accuracyNotice"><strong>정확도 안내</strong><span>브라우저 확대/축소를 100%로 두고 화면 보정 후 사용하세요. 출력 PNG는 선택한 실제 크기와 600 DPI·여백 10mm 기준으로 별도 생성됩니다.</span></div>
+
+      <div class="measurement-summary" aria-live="polite">
+        <div><span>선택 폰트</span><b id="selectedFontName">Noto Sans KR</b></div>
+        <div><span>실제 가로</span><b><em id="actualWidth">7.0</em> cm</b></div>
+        <div><span>실제 세로</span><b><em id="actualHeight">2.2</em> cm</b></div>
+        <div><span>출력 픽셀</span><b id="outputPixels">827 × 260</b></div>
+        <div><span>화면 보기</span><b><em id="viewScalePercent">100</em>%</b></div>
+      </div>
+
+      <div class="workbench-scroll" id="workbenchScroll">
+        <div class="workbench" id="workbench">
+          <div class="corner-cell">cm</div>
+          <div class="ruler ruler-horizontal" id="horizontalRuler" aria-hidden="true"></div>
+          <div class="ruler ruler-vertical" id="verticalRuler" aria-hidden="true"></div>
+          <div class="stage-wrap" id="stageWrap">
+            <svg id="stageSvg" class="stage-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DTF 시안 작업판">
+              <defs>
+                <pattern id="minorGrid" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M 1 0 L 0 0 0 1" fill="none" stroke="#cbd5e1" stroke-width="0.04" /></pattern>
+                <pattern id="majorGrid" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="url(#minorGrid)" /><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#94a3b8" stroke-width="0.12" /></pattern>
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.18" /></filter>
+              </defs>
+              <rect id="stageBackground" x="0" y="0" width="100%" height="100%" fill="#ffffff" />
+              <rect id="gridBackground" x="0" y="0" width="100%" height="100%" fill="url(#majorGrid)" />
+              <g id="mockupLayer"></g>
+              <g id="guideLayer"></g>
+              <g id="designLayer">
+                <g id="designTransform">
+                  <g id="textShape"></g>
+                </g>
+                <rect id="designHitArea" fill="transparent" stroke="none" />
+              </g>
+              <g id="dimensionLayer" pointer-events="none"></g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="license-note"><b>폰트 사용 안내</b><p>페이지의 폰트는 Google Fonts 제공 폰트를 사용합니다. 실제 상품·로고 제작 전에는 해당 폰트의 최신 라이선스와 상표 사용 조건을 다시 확인하세요.</p></div>
+    </section>
+  </main>
+
+  <div class="modal" id="fontPickerModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fontPickerTitle">
+    <div class="modal-backdrop" data-close-font-modal></div>
+    <div class="modal-card font-picker-modal-card">
+      <button type="button" class="modal-close" data-close-font-modal aria-label="닫기">×</button>
+      <p class="eyebrow">FONT PICKER</p>
+      <h2 id="fontPickerTitle">폰트 선택</h2>
+      <p class="modal-intro">문구에 적용할 폰트를 미리 보고 선택하세요.</p>
+      <div class="font-picker-tools">
+        <div class="segmented" role="tablist" aria-label="폰트 언어 선택">
+          <button type="button" class="segment is-active" data-font-category="ko" role="tab" aria-selected="true">한글 폰트</button>
+          <button type="button" class="segment" data-font-category="en" role="tab" aria-selected="false">영문 폰트</button>
+        </div>
+        <label class="search-box" aria-label="폰트 검색"><span>⌕</span><input id="fontSearch" type="search" placeholder="폰트명 검색" autocomplete="off" /></label>
+      </div>
+      <div id="fontGrid" class="font-grid modal-font-grid" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="calibrationModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="calibrationTitle">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <button type="button" class="modal-close" data-close-modal aria-label="닫기">×</button>
+      <p class="eyebrow">SCREEN CALIBRATION</p>
+      <h2 id="calibrationTitle">화면 실제 크기 보정</h2>
+      <p class="modal-intro">실물 신용카드의 가로 길이 85.60mm와 아래 카드가 정확히 같아지도록 조절하세요.</p>
+      <div class="calibration-stage"><div class="credit-card" id="calibrationCard"><span>85.60 mm</span><small>실물 카드와 포개어 확인</small></div></div>
+      <div class="calibration-controls"><button type="button" class="nudge-btn" id="decreaseCalibration" aria-label="크기 줄이기">−</button><input id="calibrationRange" type="range" min="60" max="180" step="0.1" value="100" /><button type="button" class="nudge-btn" id="increaseCalibration" aria-label="크기 키우기">＋</button></div>
+      <div class="calibration-value"><b id="calibrationPercent">100.0</b>%</div>
+      <ol class="calibration-steps"><li>브라우저 확대/축소를 100%로 설정합니다.</li><li>실물 신용카드를 화면에 대고 가로 폭을 맞춥니다.</li><li>저장 후 ‘실제 크기’ 보기에서 자로 한 번 더 확인합니다.</li></ol>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" id="resetCalibrationBtn">보정값 초기화</button><button type="button" class="btn btn-primary" id="saveCalibrationBtn">보정값 저장</button></div>
+    </div>
+  </div>
+
+  <canvas id="measureCanvas" width="64" height="64" hidden></canvas>
+  <input id="projectFileInput" type="file" accept="application/json" hidden />
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+"use strict";
+
+const BASE_PX_PER_CM = 96 / 2.54;
+const CARD_WIDTH_CM = 8.56;
+const CARD_HEIGHT_CM = 5.398;
+const CALIBRATION_KEY = "dtf-screen-calibration-v2";
+const PROJECT_KEY = "dtf-project-v2";
+const MM_TO_INCH = 1 / 25.4;
+
+function storageGet(key) { try { return window.localStorage.getItem(key); } catch (_) { return null; } }
+function storageSet(key, value) { try { window.localStorage.setItem(key, value); return true; } catch (_) { return false; } }
+function storageRemove(key) { try { window.localStorage.removeItem(key); } catch (_) { /* storage unavailable */ } }
+
+const fonts = {
+  ko: [
+    { name: "Noto Sans KR", family: '"Noto Sans KR", sans-serif', weights: [400,500,600,700,800,900], sample: "통영 전사" },
+    { name: "Noto Serif KR", family: '"Noto Serif KR", serif', weights: [400,600,700,800,900], sample: "통영 전사" },
+    { name: "Nanum Gothic", family: '"Nanum Gothic", sans-serif', weights: [400,700,800], sample: "통영 전사" },
+    { name: "Nanum Myeongjo", family: '"Nanum Myeongjo", serif', weights: [400,700,800], sample: "통영 전사" },
+    { name: "Black Han Sans", family: '"Black Han Sans", sans-serif', weights: [400], sample: "통영 전사" },
+    { name: "Do Hyeon", family: '"Do Hyeon", sans-serif', weights: [400], sample: "통영 전사" },
+    { name: "Jua", family: '"Jua", sans-serif', weights: [400], sample: "통영 전사" },
+    { name: "Gaegu", family: '"Gaegu", cursive', weights: [400,700], sample: "통영 전사" },
+    { name: "Gowun Dodum", family: '"Gowun Dodum", sans-serif', weights: [400], sample: "통영 전사" },
+    { name: "Song Myung", family: '"Song Myung", serif', weights: [400], sample: "통영 전사" }
+  ],
+  en: [
+    { name: "Montserrat", family: '"Montserrat", sans-serif', weights: [400,500,600,700,800], sample: "TEAM MAKER" },
+    { name: "Poppins", family: '"Poppins", sans-serif', weights: [400,500,600,700], sample: "TEAM MAKER" },
+    { name: "Bebas Neue", family: '"Bebas Neue", sans-serif', weights: [400], sample: "TEAM MAKER" },
+    { name: "Oswald", family: '"Oswald", sans-serif', weights: [400,500,600,700], sample: "TEAM MAKER" },
+    { name: "Playfair Display", family: '"Playfair Display", serif', weights: [400,600,700], sample: "Team Maker" },
+    { name: "Roboto Slab", family: '"Roboto Slab", serif', weights: [400,600,700], sample: "TEAM MAKER" },
+    { name: "Pacifico", family: '"Pacifico", cursive', weights: [400], sample: "Team Maker" },
+    { name: "Lobster", family: '"Lobster", cursive', weights: [400], sample: "Team Maker" },
+    { name: "Anton", family: '"Anton", sans-serif', weights: [400], sample: "TEAM MAKER" },
+    { name: "Raleway", family: '"Raleway", sans-serif', weights: [400,500,600,700], sample: "TEAM MAKER" }
+  ]
+};
+
+const products = {
+  teeFront: { label: "반팔 앞면", stageW: 700, stageH: 900, anchorX: 350, anchorY: 395, print: { x: 185, y: 230, w: 330, h: 420 }, defaultX: 0, defaultY: 0 },
+  teeBack: { label: "반팔 뒷면", stageW: 700, stageH: 900, anchorX: 350, anchorY: 385, print: { x: 175, y: 210, w: 350, h: 450 }, defaultX: 0, defaultY: 0 },
+  hoodie: { label: "후드티 앞면", stageW: 760, stageH: 980, anchorX: 380, anchorY: 470, print: { x: 235, y: 315, w: 290, h: 330 }, defaultX: 0, defaultY: 0 },
+  tote: { label: "에코백", stageW: 650, stageH: 800, anchorX: 325, anchorY: 460, print: { x: 155, y: 250, w: 340, h: 390 }, defaultX: 0, defaultY: 0 },
+  workChest: { label: "작업복 왼쪽 가슴", stageW: 700, stageH: 900, anchorX: 265, anchorY: 330, print: { x: 185, y: 270, w: 160, h: 120 }, defaultX: 0, defaultY: 0 },
+  workBack: { label: "작업복 등판", stageW: 700, stageH: 900, anchorX: 350, anchorY: 395, print: { x: 175, y: 225, w: 350, h: 420 }, defaultX: 0, defaultY: 0 }
+};
+
+const defaultState = {
+  category: "ko",
+  fontName: "Noto Sans KR",
+  text: "통영\nTEAM MAKER",
+  sizeCm: 7,
+  basis: "width",
+  color: "#111827",
+  outlineColor: "#ffffff",
+  outlineMm: 0,
+  weight: 700,
+  letterSpacingMm: 0,
+  lineHeight: 1.1,
+  align: "center",
+  viewMode: "grid",
+  productType: "teeFront",
+  garmentColor: "#252b37",
+  posXcm: 0,
+  posYcm: 0,
+  gridXcm: 0,
+  gridYcm: 0,
+  mirror: false,
+  guides: true,
+  exportDpi: 600,
+  exportPaddingMm: 10,
+  viewScale: 1,
+  calibration: Number(storageGet(CALIBRATION_KEY)) || 1,
+  isCalibrated: storageGet(CALIBRATION_KEY) !== null
+};
+
+const state = { ...defaultState };
+let geometry = null;
+let stageSize = { widthMm: 360, heightMm: 210 };
+let renderSequence = 0;
+let dragData = null;
+let toastTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const els = {
+  textInput: $("textInput"), charCount: $("charCount"), fontSearch: $("fontSearch"), fontGrid: $("fontGrid"), openFontPickerBtn: $("openFontPickerBtn"), fontPickerModal: $("fontPickerModal"), currentFontName: $("currentFontName"), currentFontSample: $("currentFontSample"), compactSizeValue: $("compactSizeValue"), controlTabButtons: [...document.querySelectorAll("[data-control-tab]")], controlTabPanels: [...document.querySelectorAll("[data-control-panel]")],
+  categoryButtons: [...document.querySelectorAll("[data-font-category]")], basisButtons: [...document.querySelectorAll("[data-size-basis]")],
+  sizePresets: [...document.querySelectorAll("[data-size]")], customSize: $("customSize"), sizeRange: $("sizeRange"),
+  textColor: $("textColor"), textColorCode: $("textColorCode"), fontWeight: $("fontWeight"),
+  viewModeButtons: [...document.querySelectorAll("[data-view-mode]")], mockupControls: $("mockupControls"), productType: $("productType"),
+  garmentColor: $("garmentColor"), garmentColorCode: $("garmentColorCode"),
+  downloadPngBtn: $("downloadPngBtn"), copySpecBtn: $("copySpecBtn"), exportInfo: $("exportInfo"), selectedFontName: $("selectedFontName"),
+  actualWidth: $("actualWidth"), actualHeight: $("actualHeight"), outputPixels: $("outputPixels"), viewScalePercent: $("viewScalePercent"),
+  previewTitle: $("previewTitle"), zoomValue: $("zoomValue"), zoomOutBtn: $("zoomOutBtn"), zoomInBtn: $("zoomInBtn"), actualSizeBtn: $("actualSizeBtn"),
+  fitViewBtn: $("fitViewBtn"), workbenchScroll: $("workbenchScroll"), workbench: $("workbench"), stageWrap: $("stageWrap"), stageSvg: $("stageSvg"),
+  horizontalRuler: $("horizontalRuler"), verticalRuler: $("verticalRuler"), stageBackground: $("stageBackground"), gridBackground: $("gridBackground"),
+  mockupLayer: $("mockupLayer"), guideLayer: $("guideLayer"), designTransform: $("designTransform"), textShape: $("textShape"),
+  designHitArea: $("designHitArea"), dimensionLayer: $("dimensionLayer"), calibrationDot: $("calibrationDot"), calibrationStatus: $("calibrationStatus"),
+  calibrationDescription: $("calibrationDescription"), accuracyNotice: $("accuracyNotice"), openCalibrationBtn: $("openCalibrationBtn"),
+  calibrationModal: $("calibrationModal"), calibrationRange: $("calibrationRange"), calibrationCard: $("calibrationCard"), calibrationPercent: $("calibrationPercent"),
+  decreaseCalibration: $("decreaseCalibration"), increaseCalibration: $("increaseCalibration"), saveCalibrationBtn: $("saveCalibrationBtn"),
+  resetCalibrationBtn: $("resetCalibrationBtn"), saveProjectBtn: $("saveProjectBtn"), loadProjectBtn: $("loadProjectBtn"), projectFileInput: $("projectFileInput"),
+  measureCanvas: $("measureCanvas"), toast: $("toast")
+};
+
+function getFont() {
+  return Object.values(fonts).flat().find((font) => font.name === state.fontName) || fonts.ko[0];
+}
+function getPxPerCm() { return BASE_PX_PER_CM * state.calibration; }
+function sanitizeText() { return (state.text || "").replace(/\r/g, ""); }
+function displayText() { return sanitizeText().trim() ? sanitizeText() : "문구를 입력하세요"; }
+function getLines() { return displayText().split("\n").slice(0, 12); }
+function graphemes(text) {
+  if (typeof Intl !== "undefined" && Intl.Segmenter) return [...new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(text)].map(item => item.segment);
+  return Array.from(text);
+}
+function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
+function round(value, digits = 1) { const p = 10 ** digits; return Math.round(value * p) / p; }
+function svgEl(name, attrs = {}) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+  Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+  return node;
+}
+function showToast(message, isError = false) {
+  clearTimeout(toastTimer);
+  els.toast.textContent = message;
+  els.toast.classList.toggle("is-error", isError);
+  els.toast.classList.add("is-show");
+  toastTimer = setTimeout(() => els.toast.classList.remove("is-show"), 2600);
+}
+
+function canvasFont(ctx, fontSizePx) {
+  const font = getFont();
+  ctx.font = `${state.weight} ${fontSizePx}px ${font.family}`;
+  ctx.textBaseline = "alphabetic";
+}
+
+function measureLine(ctx, text, fontSizeMm, scalePxPerMm) {
+  canvasFont(ctx, fontSizeMm * scalePxPerMm);
+  const spacingPx = state.letterSpacingMm * scalePxPerMm;
+  const chars = graphemes(text || " ");
+  let cursor = 0;
+  let minInk = Infinity;
+  let maxInk = -Infinity;
+  let ascent = 0;
+  let descent = 0;
+  const glyphs = [];
+
+  chars.forEach((char, index) => {
+    const metric = ctx.measureText(char);
+    const left = cursor - (metric.actualBoundingBoxLeft || 0);
+    const right = cursor + (metric.actualBoundingBoxRight || metric.width);
+    if (char.trim()) {
+      minInk = Math.min(minInk, left);
+      maxInk = Math.max(maxInk, right);
+    }
+    ascent = Math.max(ascent, metric.actualBoundingBoxAscent || fontSizeMm * scalePxPerMm * 0.8);
+    descent = Math.max(descent, metric.actualBoundingBoxDescent || fontSizeMm * scalePxPerMm * 0.2);
+    glyphs.push({ char, xPx: cursor, widthPx: metric.width });
+    cursor += metric.width;
+    if (index < chars.length - 1) cursor += spacingPx;
+  });
+
+  if (!Number.isFinite(minInk)) { minInk = 0; maxInk = cursor; }
+  return {
+    advanceMm: cursor / scalePxPerMm,
+    inkMinMm: minInk / scalePxPerMm,
+    inkMaxMm: maxInk / scalePxPerMm,
+    ascentMm: ascent / scalePxPerMm,
+    descentMm: descent / scalePxPerMm,
+    glyphs
+  };
+}
+
+function measureDesign(fontSizeMm) {
+  const ctx = els.measureCanvas.getContext("2d");
+  const scalePxPerMm = 12;
+  const lines = getLines();
+  const lineMeasures = lines.map(line => measureLine(ctx, line, fontSizeMm, scalePxPerMm));
+  const maxAdvance = Math.max(0.1, ...lineMeasures.map(line => line.advanceMm));
+  const globalAscent = Math.max(...lineMeasures.map(line => line.ascentMm), fontSizeMm * 0.78);
+  const lineStep = fontSizeMm * state.lineHeight;
+  const layouts = [];
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let top = Infinity;
+  let bottom = -Infinity;
+
+  lineMeasures.forEach((line, index) => {
+    let alignOffset = 0;
+    if (state.align === "center") alignOffset = (maxAdvance - line.advanceMm) / 2;
+    if (state.align === "right") alignOffset = maxAdvance - line.advanceMm;
+    const baseline = globalAscent + index * lineStep;
+    minX = Math.min(minX, alignOffset + line.inkMinMm);
+    maxX = Math.max(maxX, alignOffset + line.inkMaxMm);
+    top = Math.min(top, baseline - line.ascentMm);
+    bottom = Math.max(bottom, baseline + line.descentMm);
+    layouts.push({ ...line, text: lines[index], startX: alignOffset, baselineMm: baseline });
+  });
+
+  const halfStroke = state.outlineMm / 2;
+  minX -= halfStroke;
+  maxX += halfStroke;
+  top -= halfStroke;
+  bottom += halfStroke;
+  return {
+    fontSizeMm, maxAdvance, minX, maxX, top, bottom,
+    widthMm: Math.max(0.1, maxX - minX),
+    heightMm: Math.max(0.1, bottom - top),
+    lineStep, layouts
+  };
+}
+
+function fitGeometry() {
+  const targetMm = state.sizeCm * 10;
+  let low = 0.2;
+  let high = 1500;
+  let best = measureDesign(low);
+  for (let i = 0; i < 42; i += 1) {
+    const mid = (low + high) / 2;
+    const measured = measureDesign(mid);
+    const current = state.basis === "width" ? measured.widthMm : measured.heightMm;
+    if (current <= targetMm) { best = measured; low = mid; } else { high = mid; }
+  }
+  return best;
+}
+
+async function ensureFontLoaded() {
+  if (!document.fonts?.load) return;
+  const font = getFont();
+  try { await document.fonts.load(`${state.weight} 48px ${font.family}`, displayText()); } catch (_) { /* fallback font is still usable */ }
+}
+
+function openFontPicker() {
+  els.fontPickerModal.classList.add("is-open");
+  els.fontPickerModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => els.fontSearch.focus(), 30);
+}
+function closeFontPicker() {
+  els.fontPickerModal.classList.remove("is-open");
+  els.fontPickerModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+function activateControlTab(name) {
+  els.controlTabButtons.forEach(button => {
+    const active = button.dataset.controlTab === name;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  els.controlTabPanels.forEach(panel => {
+    const active = panel.dataset.controlPanel === name;
+    panel.classList.toggle("is-active", active);
+    panel.hidden = !active;
+  });
+}
+
+function renderFontGrid() {
+  const query = els.fontSearch.value.trim().toLowerCase();
+  const list = fonts[state.category].filter(font => font.name.toLowerCase().includes(query));
+  els.fontGrid.innerHTML = "";
+  if (!list.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-font";
+    empty.textContent = "검색 결과가 없습니다.";
+    els.fontGrid.appendChild(empty);
+    return;
+  }
+  list.forEach(font => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `font-card${state.fontName === font.name ? " is-active" : ""}`;
+    const sample = document.createElement("strong");
+    sample.textContent = font.sample;
+    sample.style.fontFamily = font.family;
+    sample.style.fontWeight = font.weights.includes(state.weight) ? state.weight : font.weights[0];
+    const name = document.createElement("span");
+    name.textContent = `${font.name} · ${font.weights.length} weight`;
+    button.append(sample, name);
+    button.addEventListener("click", () => {
+      state.fontName = font.name;
+      if (!font.weights.includes(state.weight)) state.weight = font.weights[font.weights.length - 1];
+      renderFontGrid();
+      renderWeightOptions();
+      scheduleRender(true);
+      closeFontPicker();
+    });
+    els.fontGrid.appendChild(button);
+  });
+}
+
+function renderWeightOptions() {
+  const font = getFont();
+  const labels = { 400: "Regular 400", 500: "Medium 500", 600: "Semi Bold 600", 700: "Bold 700", 800: "Extra Bold 800", 900: "Black 900" };
+  if (!font.weights.includes(state.weight)) state.weight = font.weights[font.weights.length - 1];
+  els.fontWeight.innerHTML = "";
+  font.weights.forEach(weight => {
+    const option = document.createElement("option");
+    option.value = String(weight);
+    option.textContent = labels[weight] || String(weight);
+    option.selected = weight === state.weight;
+    els.fontWeight.appendChild(option);
+  });
+}
+
+function updateStageSize() {
+  if (state.viewMode === "mockup") {
+    const product = products[state.productType];
+    stageSize = { widthMm: product.stageW, heightMm: product.stageH };
+  } else {
+    stageSize = {
+      widthMm: Math.max(360, Math.ceil((geometry.widthMm + 120) / 10) * 10),
+      heightMm: Math.max(210, Math.ceil((geometry.heightMm + 100) / 10) * 10)
+    };
+  }
+}
+
+function renderRulers() {
+  const pxPerMm = getPxPerCm() / 10 * state.viewScale;
+  const widthPx = stageSize.widthMm * pxPerMm;
+  const heightPx = stageSize.heightMm * pxPerMm;
+  els.horizontalRuler.style.width = `${widthPx}px`;
+  els.verticalRuler.style.height = `${heightPx}px`;
+  els.horizontalRuler.innerHTML = "";
+  els.verticalRuler.innerHTML = "";
+
+  const addMarks = (container, totalMm, horizontal) => {
+    const fragment = document.createDocumentFragment();
+    const showTenths = state.viewScale >= 0.7;
+    const stepMm = showTenths ? 1 : 5;
+    const pxPerCm = pxPerMm * 10;
+    const labelStepCm = pxPerCm < 10 ? 10 : pxPerCm < 20 ? 5 : pxPerCm < 34 ? 2 : 1;
+    for (let mm = 0; mm <= totalMm; mm += stepMm) {
+      const mark = document.createElement("span");
+      const wholeCm = mm % 10 === 0;
+      const halfCm = mm % 5 === 0 && !wholeCm;
+      mark.className = `ruler-mark${wholeCm ? "" : halfCm ? " half" : " tenth"}`;
+      if (horizontal) mark.style.left = `${mm * pxPerMm}px`;
+      else mark.style.top = `${mm * pxPerMm}px`;
+      if (wholeCm && mm < totalMm && (mm / 10) % labelStepCm === 0) {
+        const label = document.createElement("span");
+        label.textContent = String(mm / 10);
+        mark.appendChild(label);
+      }
+      fragment.appendChild(mark);
+    }
+    container.appendChild(fragment);
+  };
+  addMarks(els.horizontalRuler, stageSize.widthMm, true);
+  addMarks(els.verticalRuler, stageSize.heightMm, false);
+}
+
+function renderStageDimensions() {
+  const pxPerMm = getPxPerCm() / 10 * state.viewScale;
+  els.stageSvg.setAttribute("viewBox", `0 0 ${stageSize.widthMm} ${stageSize.heightMm}`);
+  els.stageSvg.setAttribute("width", String(stageSize.widthMm * pxPerMm));
+  els.stageSvg.setAttribute("height", String(stageSize.heightMm * pxPerMm));
+  els.stageSvg.style.width = `${stageSize.widthMm * pxPerMm}px`;
+  els.stageSvg.style.height = `${stageSize.heightMm * pxPerMm}px`;
+  els.stageBackground.setAttribute("width", stageSize.widthMm);
+  els.stageBackground.setAttribute("height", stageSize.heightMm);
+  els.gridBackground.setAttribute("width", stageSize.widthMm);
+  els.gridBackground.setAttribute("height", stageSize.heightMm);
+  els.gridBackground.style.display = state.viewMode === "grid" ? "block" : "none";
+  els.stageBackground.setAttribute("fill", state.viewMode === "grid" ? "#ffffff" : "#f4f6f8");
+  renderRulers();
+}
+
+function productSvgMarkup(type, color) {
+  const dark = "#475467";
+  const seam = "rgba(255,255,255,.28)";
+  if (type === "tote") {
+    return `<g filter="url(#softShadow)"><path d="M185 190 C185 70 465 70 465 190" fill="none" stroke="${color}" stroke-width="32" stroke-linecap="round"/><rect x="115" y="175" width="420" height="520" rx="20" fill="${color}" stroke="${dark}" stroke-width="3"/><path d="M115 240 H535" stroke="${seam}" stroke-width="2"/></g>`;
+  }
+  if (type === "hoodie") {
+    return `<g filter="url(#softShadow)"><path d="M300 105 C325 30 435 30 460 105 L500 155 L620 225 L690 420 L600 460 L535 320 L535 855 L225 855 L225 320 L160 460 L70 420 L140 225 L260 155 Z" fill="${color}" stroke="${dark}" stroke-width="3"/><path d="M300 105 C330 165 430 165 460 105 C450 210 310 210 300 105Z" fill="none" stroke="${seam}" stroke-width="3"/><path d="M300 650 Q380 600 460 650 L450 755 H310Z" fill="none" stroke="${seam}" stroke-width="3"/><path d="M365 165 V315 M395 165 V315" stroke="${seam}" stroke-width="3"/></g>`;
+  }
+  const isBack = type === "teeBack" || type === "workBack";
+  const isWork = type === "workChest" || type === "workBack";
+  const neckline = isBack ? "C430 150 270 150 240 110" : "C260 205 440 205 460 110";
+  const base = `<g filter="url(#softShadow)"><path d="M240 110 L160 140 L45 250 L130 340 L180 300 L180 760 L520 760 L520 300 L570 340 L655 250 L540 140 L460 110 ${neckline} Z" fill="${color}" stroke="${dark}" stroke-width="3"/><path d="M180 300 L150 155 M520 300 L550 155" stroke="${seam}" stroke-width="2"/>`;
+  const work = isWork ? `<path d="M300 145 L350 225 L400 145 M350 225 V800" fill="none" stroke="${seam}" stroke-width="3"/><rect x="250" y="285" width="90" height="90" rx="6" fill="none" stroke="${seam}" stroke-width="2"/><rect x="360" y="285" width="90" height="90" rx="6" fill="none" stroke="${seam}" stroke-width="2"/>` : "";
+  return `${base}${work}</g>`;
+}
+
+function renderMockup() {
+  els.mockupLayer.innerHTML = "";
+  if (state.viewMode !== "mockup") return;
+  els.mockupLayer.innerHTML = productSvgMarkup(state.productType, state.garmentColor);
+}
+
+function getDesignCenter() {
+  if (state.viewMode === "mockup") {
+    const product = products[state.productType];
+    return { x: product.anchorX + state.posXcm * 10, y: product.anchorY + state.posYcm * 10 };
+  }
+  return { x: stageSize.widthMm / 2 + state.gridXcm * 10, y: stageSize.heightMm / 2 + state.gridYcm * 10 };
+}
+
+function renderGuides() {
+  els.guideLayer.innerHTML = "";
+  if (!state.guides) return;
+  const center = getDesignCenter();
+  if (state.viewMode === "mockup") {
+    const p = products[state.productType];
+    const rect = svgEl("rect", { x: p.print.x, y: p.print.y, width: p.print.w, height: p.print.h, rx: 5, fill: "none", stroke: "#2557d6", "stroke-width": 1.5, "stroke-dasharray": "8 6", opacity: .8 });
+    const lineV = svgEl("line", { x1: p.anchorX, y1: p.print.y, x2: p.anchorX, y2: p.print.y + p.print.h, stroke: "#2557d6", "stroke-width": .8, "stroke-dasharray": "5 5", opacity: .55 });
+    const lineH = svgEl("line", { x1: p.print.x, y1: p.anchorY, x2: p.print.x + p.print.w, y2: p.anchorY, stroke: "#2557d6", "stroke-width": .8, "stroke-dasharray": "5 5", opacity: .55 });
+    els.guideLayer.append(rect, lineV, lineH);
+  } else {
+    const lineV = svgEl("line", { x1: stageSize.widthMm / 2, y1: 0, x2: stageSize.widthMm / 2, y2: stageSize.heightMm, stroke: "#2557d6", "stroke-width": .45, "stroke-dasharray": "5 5", opacity: .35 });
+    const lineH = svgEl("line", { x1: 0, y1: stageSize.heightMm / 2, x2: stageSize.widthMm, y2: stageSize.heightMm / 2, stroke: "#2557d6", "stroke-width": .45, "stroke-dasharray": "5 5", opacity: .35 });
+    els.guideLayer.append(lineV, lineH);
+  }
+  const crossV = svgEl("line", { x1: center.x, y1: center.y - 7, x2: center.x, y2: center.y + 7, stroke: "#d92d20", "stroke-width": 1 });
+  const crossH = svgEl("line", { x1: center.x - 7, y1: center.y, x2: center.x + 7, y2: center.y, stroke: "#d92d20", "stroke-width": 1 });
+  els.guideLayer.append(crossV, crossH);
+}
+
+function renderTextDesign() {
+  const center = getDesignCenter();
+  els.textShape.innerHTML = "";
+  geometry.layouts.forEach(layout => {
+    const text = svgEl("text", {
+      x: layout.startX,
+      y: layout.baselineMm,
+      fill: state.color,
+      stroke: state.outlineMm > 0 ? state.outlineColor : "none",
+      "stroke-width": state.outlineMm,
+      "paint-order": "stroke fill",
+      "stroke-linejoin": "round",
+      "font-family": getFont().family,
+      "font-size": geometry.fontSizeMm,
+      "font-weight": state.weight,
+      "letter-spacing": state.letterSpacingMm,
+      "xml:space": "preserve"
+    });
+    text.textContent = layout.text || " ";
+    els.textShape.appendChild(text);
+  });
+  const originX = (geometry.minX + geometry.maxX) / 2;
+  const originY = (geometry.top + geometry.bottom) / 2;
+  const mirrorScale = state.mirror ? -1 : 1;
+  els.designTransform.setAttribute("transform", `translate(${center.x} ${center.y}) scale(${mirrorScale} 1) translate(${-originX} ${-originY})`);
+  els.designHitArea.setAttribute("x", center.x - geometry.widthMm / 2 - 5);
+  els.designHitArea.setAttribute("y", center.y - geometry.heightMm / 2 - 5);
+  els.designHitArea.setAttribute("width", geometry.widthMm + 10);
+  els.designHitArea.setAttribute("height", geometry.heightMm + 10);
+}
+
+function pill(x, y, text, anchor = "middle") {
+  const width = Math.max(34, text.length * 5.2 + 12);
+  const group = svgEl("g");
+  let rectX = x - width / 2;
+  if (anchor === "start") rectX = x;
+  if (anchor === "end") rectX = x - width;
+  const rect = svgEl("rect", { x: rectX, y: y - 9, width, height: 17, rx: 8.5, fill: "#d92d20" });
+  const label = svgEl("text", { x: anchor === "middle" ? x : anchor === "start" ? x + 6 : x - 6, y: y + 3, fill: "#ffffff", "font-family": "Montserrat, sans-serif", "font-size": 7.5, "font-weight": 700, "text-anchor": anchor });
+  label.textContent = text;
+  group.append(rect, label);
+  return group;
+}
+
+function renderDimensions() {
+  els.dimensionLayer.innerHTML = "";
+  const center = getDesignCenter();
+  const x = center.x - geometry.widthMm / 2;
+  const y = center.y - geometry.heightMm / 2;
+  const rect = svgEl("rect", { x, y, width: geometry.widthMm, height: geometry.heightMm, fill: "none", stroke: "#d92d20", "stroke-width": .65, "stroke-dasharray": "3 2" });
+  els.dimensionLayer.append(rect);
+  els.dimensionLayer.append(pill(center.x, y - 11, `${(geometry.widthMm / 10).toFixed(1)}cm`));
+  els.dimensionLayer.append(pill(x + geometry.widthMm + 10, center.y, `${(geometry.heightMm / 10).toFixed(1)}cm`, "start"));
+}
+
+function updateSummary() {
+  const dpi = state.exportDpi;
+  const padding = state.exportPaddingMm;
+  const pxW = Math.max(1, Math.ceil((geometry.widthMm + padding * 2) * MM_TO_INCH * dpi));
+  const pxH = Math.max(1, Math.ceil((geometry.heightMm + padding * 2) * MM_TO_INCH * dpi));
+  els.selectedFontName.textContent = state.fontName;
+  els.actualWidth.textContent = (geometry.widthMm / 10).toFixed(1);
+  els.actualHeight.textContent = (geometry.heightMm / 10).toFixed(1);
+  els.outputPixels.textContent = `${pxW.toLocaleString("ko-KR")} × ${pxH.toLocaleString("ko-KR")}`;
+  els.viewScalePercent.textContent = Math.round(state.viewScale * 100);
+  els.zoomValue.textContent = `${Math.round(state.viewScale * 100)}%`;
+  els.exportInfo.innerHTML = `<b>${dpi} DPI</b> · ${pxW.toLocaleString("ko-KR")} × ${pxH.toLocaleString("ko-KR")}px · 실제 ${(geometry.widthMm / 10).toFixed(1)} × ${(geometry.heightMm / 10).toFixed(1)}cm · 투명 배경`;
+  els.previewTitle.textContent = state.viewMode === "grid" ? "눈금 작업판" : products[state.productType].label;
+}
+
+function updateControlDisplays() {
+  els.charCount.textContent = state.text.length;
+  els.textColorCode.textContent = state.color.toUpperCase();
+  els.currentFontName.textContent = state.fontName;
+  els.currentFontSample.style.fontFamily = getFont().family;
+  els.currentFontSample.style.fontWeight = state.weight;
+  els.currentFontSample.textContent = (displayText().replace(/\n/g, " ").slice(0, 12) || "FONT");
+  els.compactSizeValue.textContent = String(state.sizeCm).replace(/\.0$/, "");
+  els.garmentColorCode.textContent = state.garmentColor.toUpperCase();
+  els.mockupControls.hidden = state.viewMode !== "mockup";
+  els.sizePresets.forEach(button => button.classList.toggle("is-active", Math.abs(Number(button.dataset.size) - state.sizeCm) < 0.001));
+  els.calibrationDot.classList.toggle("is-calibrated", state.isCalibrated);
+  els.calibrationStatus.textContent = state.isCalibrated ? `화면 보정 완료 · ${Math.round(state.calibration * 100)}%` : "기본 화면 배율 적용 중";
+  els.calibrationDescription.textContent = state.isCalibrated ? "화면의 1:1 실제 크기에 보정값을 적용했습니다. PNG 출력 규격은 보정값의 영향을 받지 않습니다." : "정확한 1:1 화면 확인이 필요하면 실물 카드로 보정하세요. PNG 출력 크기는 화면 보정과 무관하게 유지됩니다.";
+  document.documentElement.style.setProperty("--px-per-cm", `${getPxPerCm()}px`);
+  document.documentElement.style.setProperty("--view-scale", String(state.viewScale));
+}
+
+async function renderAll({ keepViewport = true } = {}) {
+  const token = ++renderSequence;
+  await ensureFontLoaded();
+  if (token !== renderSequence) return;
+  geometry = fitGeometry();
+  updateStageSize();
+  updateControlDisplays();
+  renderStageDimensions();
+  renderMockup();
+  renderGuides();
+  renderTextDesign();
+  renderDimensions();
+  updateSummary();
+  if (!keepViewport) requestAnimationFrame(fitView);
+}
+
+let renderTimer = null;
+function scheduleRender(fontMayChange = false, keepViewport = true) {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(() => renderAll({ keepViewport }), fontMayChange ? 40 : 0);
+}
+
+function setCategory(category) {
+  state.category = category;
+  if (!fonts[category].some(font => font.name === state.fontName)) {
+    state.fontName = fonts[category][0].name;
+    state.weight = fonts[category][0].weights.includes(700) ? 700 : fonts[category][0].weights[0];
+  }
+  els.categoryButtons.forEach(button => {
+    const active = button.dataset.fontCategory === category;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  renderFontGrid();
+  renderWeightOptions();
+  scheduleRender(true);
+}
+
+function setSize(value) {
+  state.sizeCm = round(clamp(Number(value) || 1, 1, 60), 1);
+  els.customSize.value = state.sizeCm;
+  els.sizeRange.value = state.sizeCm;
+  scheduleRender();
+}
+
+function setViewMode(mode) {
+  state.viewMode = mode;
+  els.viewModeButtons.forEach(button => {
+    const active = button.dataset.viewMode === mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-checked", String(active));
+  });
+  scheduleRender(false, false);
+}
+
+function setZoom(next) {
+  state.viewScale = clamp(round(next, 2), 0.1, 3);
+  updateControlDisplays();
+  renderStageDimensions();
+  updateSummary();
+}
+
+function fitView() {
+  const availableW = Math.max(180, els.workbenchScroll.clientWidth - 92);
+  const availableH = Math.max(180, els.workbenchScroll.clientHeight - 92);
+  const naturalW = stageSize.widthMm * getPxPerCm() / 10;
+  const naturalH = stageSize.heightMm * getPxPerCm() / 10;
+  const scale = clamp(Math.min(availableW / naturalW, availableH / naturalH), 0.1, 1.5);
+  setZoom(scale);
+  requestAnimationFrame(() => {
+    els.workbenchScroll.scrollTo({ left: Math.max(0, (els.workbench.scrollWidth - els.workbenchScroll.clientWidth) / 2), top: Math.max(0, (els.workbench.scrollHeight - els.workbenchScroll.clientHeight) / 2), behavior: "smooth" });
+  });
+}
+
+function openCalibration() {
+  const percent = state.calibration * 100;
+  els.calibrationRange.value = percent;
+  els.calibrationModal.classList.add("is-open");
+  els.calibrationModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  updateCalibrationPreview(percent);
+}
+function closeCalibration() {
+  els.calibrationModal.classList.remove("is-open");
+  els.calibrationModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+function updateCalibrationPreview(percent) {
+  const factor = Number(percent) / 100;
+  els.calibrationPercent.textContent = Number(percent).toFixed(1);
+  els.calibrationCard.style.width = `${CARD_WIDTH_CM * BASE_PX_PER_CM * factor}px`;
+  els.calibrationCard.style.height = `${CARD_HEIGHT_CM * BASE_PX_PER_CM * factor}px`;
+}
+function nudgeCalibration(amount) {
+  const next = clamp(Number(els.calibrationRange.value) + amount, 60, 180);
+  els.calibrationRange.value = next.toFixed(1);
+  updateCalibrationPreview(next);
+}
+
+function projectData() {
+  const keys = Object.keys(defaultState).filter(key => !["calibration", "isCalibrated", "viewScale"].includes(key));
+  return Object.fromEntries(keys.map(key => [key, state[key]]));
+}
+function saveProject() {
+  storageSet(PROJECT_KEY, JSON.stringify(projectData()));
+  const blob = new Blob([JSON.stringify({ version: 2, savedAt: new Date().toISOString(), project: projectData() }, null, 2)], { type: "application/json" });
+  downloadBlob(blob, `DTF_${safeFilename(displayText())}_프로젝트.json`);
+  showToast("브라우저에 저장하고 프로젝트 파일도 내려받았습니다.");
+}
+function applyProject(project) {
+  if (!project || typeof project !== "object") throw new Error("올바른 프로젝트 데이터가 아닙니다.");
+  Object.keys(defaultState).forEach(key => {
+    if (key in project && !["calibration", "isCalibrated"].includes(key)) state[key] = project[key];
+  });
+  normalizeState();
+  syncControlsFromState();
+  renderFontGrid();
+  renderWeightOptions();
+  scheduleRender(true, false);
+}
+function loadSavedProject() {
+  const saved = storageGet(PROJECT_KEY);
+  if (saved) {
+    try { applyProject(JSON.parse(saved)); showToast("브라우저에 저장된 프로젝트를 불러왔습니다."); return; }
+    catch (_) { storageRemove(PROJECT_KEY); }
+  }
+  els.projectFileInput.click();
+}
+function normalizeState() {
+  if (!Object.values(fonts).flat().some(font => font.name === state.fontName)) state.fontName = "Noto Sans KR";
+  const font = getFont();
+  if (!font.weights.includes(Number(state.weight))) state.weight = font.weights[0];
+  state.sizeCm = clamp(Number(state.sizeCm) || 7, 1, 60);
+  state.outlineColor = "#ffffff";
+  state.outlineMm = 0;
+  state.letterSpacingMm = 0;
+  state.lineHeight = 1.1;
+  state.align = "center";
+  state.mirror = false;
+  state.guides = true;
+  state.exportDpi = 600;
+  state.exportPaddingMm = 10;
+  state.viewScale = clamp(Number(state.viewScale) || 1, .1, 3);
+}
+function syncControlsFromState() {
+  els.textInput.value = state.text;
+  els.customSize.value = state.sizeCm;
+  els.sizeRange.value = state.sizeCm;
+  els.textColor.value = state.color;
+  els.productType.value = state.productType;
+  els.garmentColor.value = state.garmentColor;
+  els.basisButtons.forEach(button => { const active = button.dataset.sizeBasis === state.basis; button.classList.toggle("is-active", active); button.setAttribute("aria-checked", String(active)); });
+  els.categoryButtons.forEach(button => { const active = button.dataset.fontCategory === state.category; button.classList.toggle("is-active", active); button.setAttribute("aria-selected", String(active)); });
+  els.viewModeButtons.forEach(button => { const active = button.dataset.viewMode === state.viewMode; button.classList.toggle("is-active", active); button.setAttribute("aria-checked", String(active)); });
+}
+
+function safeFilename(text) {
+  return text.replace(/\s+/g, "_").replace(/[\\/:*?"<>|]/g, "").slice(0, 30) || "design";
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function drawSpacedText(ctx, text, x, baseline, scalePxPerMm, stroke) {
+  const chars = graphemes(text || " ");
+  const spacingPx = state.letterSpacingMm * scalePxPerMm;
+  let cursor = x;
+  chars.forEach((char, index) => {
+    if (stroke && state.outlineMm > 0) ctx.strokeText(char, cursor, baseline);
+    ctx.fillText(char, cursor, baseline);
+    cursor += ctx.measureText(char).width;
+    if (index < chars.length - 1) cursor += spacingPx;
+  });
+}
+
+async function createPngBlob() {
+  await ensureFontLoaded();
+  geometry = fitGeometry();
+  const dpi = state.exportDpi;
+  const pxPerMm = dpi / 25.4;
+  const padding = state.exportPaddingMm;
+  const widthPx = Math.max(1, Math.ceil((geometry.widthMm + padding * 2) * pxPerMm));
+  const heightPx = Math.max(1, Math.ceil((geometry.heightMm + padding * 2) * pxPerMm));
+  if (widthPx * heightPx > 120000000) throw new Error("출력 이미지가 너무 큽니다. 크기 또는 DPI를 낮춰주세요.");
+
+  const canvas = document.createElement("canvas");
+  canvas.width = widthPx;
+  canvas.height = heightPx;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, widthPx, heightPx);
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+  ctx.fillStyle = state.color;
+  ctx.strokeStyle = state.outlineColor;
+  ctx.lineWidth = state.outlineMm * pxPerMm;
+  canvasFont(ctx, geometry.fontSizeMm * pxPerMm);
+
+  const originX = -geometry.minX + padding;
+  const originY = -geometry.top + padding;
+  ctx.save();
+  if (state.mirror) {
+    ctx.translate(widthPx, 0);
+    ctx.scale(-1, 1);
+  }
+  geometry.layouts.forEach(layout => {
+    drawSpacedText(ctx, layout.text, (originX + layout.startX) * pxPerMm, (originY + layout.baselineMm) * pxPerMm, pxPerMm, true);
+  });
+  ctx.restore();
+
+  const rawBlob = await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("PNG 생성에 실패했습니다.")), "image/png"));
+  return injectPngDpi(rawBlob, dpi);
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (let i = 0; i < bytes.length; i += 1) {
+    crc ^= bytes[i];
+    for (let j = 0; j < 8; j += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+function uint32Bytes(value) { return new Uint8Array([(value >>> 24) & 255, (value >>> 16) & 255, (value >>> 8) & 255, value & 255]); }
+function concatBytes(chunks) {
+  const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const output = new Uint8Array(total);
+  let offset = 0;
+  chunks.forEach(chunk => { output.set(chunk, offset); offset += chunk.length; });
+  return output;
+}
+async function injectPngDpi(blob, dpi) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const signature = bytes.slice(0, 8);
+  const chunks = [];
+  let offset = 8;
+  let inserted = false;
+  const typeDecoder = new TextDecoder("ascii");
+  const typeEncoder = new TextEncoder();
+  const ppm = Math.round(dpi / 0.0254);
+  const physData = concatBytes([uint32Bytes(ppm), uint32Bytes(ppm), new Uint8Array([1])]);
+  const physType = typeEncoder.encode("pHYs");
+  const physChunk = concatBytes([uint32Bytes(physData.length), physType, physData, uint32Bytes(crc32(concatBytes([physType, physData])))]);
+
+  while (offset < bytes.length) {
+    const length = ((bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3]) >>> 0;
+    const end = offset + 12 + length;
+    const chunk = bytes.slice(offset, end);
+    const type = typeDecoder.decode(bytes.slice(offset + 4, offset + 8));
+    if (type !== "pHYs") chunks.push(chunk);
+    if (type === "IHDR" && !inserted) { chunks.push(physChunk); inserted = true; }
+    offset = end;
+  }
+  return new Blob([concatBytes([signature, ...chunks])], { type: "image/png" });
+}
+
+async function downloadPng() {
+  els.downloadPngBtn.disabled = true;
+  els.downloadPngBtn.textContent = "PNG 생성 중…";
+  try {
+    const blob = await createPngBlob();
+    downloadBlob(blob, `DTF_${safeFilename(displayText())}_${(geometry.widthMm / 10).toFixed(1)}x${(geometry.heightMm / 10).toFixed(1)}cm_${state.exportDpi}dpi.png`);
+    showToast(`${state.exportDpi} DPI 투명 PNG를 저장했습니다.`);
+  } catch (error) {
+    showToast(error.message || "PNG 저장에 실패했습니다.", true);
+  } finally {
+    els.downloadPngBtn.disabled = false;
+    els.downloadPngBtn.textContent = "투명 PNG 저장";
+  }
+}
+
+async function copySpec() {
+  const dpi = state.exportDpi;
+  const padding = state.exportPaddingMm;
+  const pxW = Math.ceil((geometry.widthMm + padding * 2) * MM_TO_INCH * dpi);
+  const pxH = Math.ceil((geometry.heightMm + padding * 2) * MM_TO_INCH * dpi);
+  const spec = [
+    `문구: ${displayText().replace(/\n/g, " / ")}`,
+    `폰트: ${state.fontName} ${state.weight}`,
+    `실제 크기: ${(geometry.widthMm / 10).toFixed(1)} × ${(geometry.heightMm / 10).toFixed(1)}cm`,
+    `색상: ${state.color.toUpperCase()}`,
+    `출력: ${dpi} DPI / 여백 ${padding}mm / ${pxW} × ${pxH}px / 투명 배경`
+  ].join("\n");
+  try { await navigator.clipboard.writeText(spec); showToast("작업 사양을 클립보드에 복사했습니다."); }
+  catch (_) { showToast("클립보드 사용 권한이 없어 복사하지 못했습니다.", true); }
+}
+
+function svgPointFromEvent(event) {
+  const point = els.stageSvg.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  const matrix = els.stageSvg.getScreenCTM();
+  return matrix ? point.matrixTransform(matrix.inverse()) : { x: 0, y: 0 };
+}
+function beginDrag(event) {
+  event.preventDefault();
+  const point = svgPointFromEvent(event);
+  dragData = { pointerId: event.pointerId, startX: point.x, startY: point.y, posXcm: state.posXcm, posYcm: state.posYcm, gridXcm: state.gridXcm, gridYcm: state.gridYcm };
+  els.designHitArea.setPointerCapture(event.pointerId);
+  els.designHitArea.classList.add("is-dragging");
+}
+function moveDrag(event) {
+  if (!dragData || event.pointerId !== dragData.pointerId) return;
+  const point = svgPointFromEvent(event);
+  const dxCm = (point.x - dragData.startX) / 10;
+  const dyCm = (point.y - dragData.startY) / 10;
+  if (state.viewMode === "mockup") {
+    state.posXcm = round(clamp(dragData.posXcm + dxCm, -25, 25), 1);
+    state.posYcm = round(clamp(dragData.posYcm + dyCm, -30, 30), 1);
+    } else {
+    state.gridXcm = round(dragData.gridXcm + dxCm, 1);
+    state.gridYcm = round(dragData.gridYcm + dyCm, 1);
+  }
+  renderGuides(); renderTextDesign(); renderDimensions();
+}
+function endDrag(event) {
+  if (!dragData || event.pointerId !== dragData.pointerId) return;
+  dragData = null;
+  els.designHitArea.classList.remove("is-dragging");
+}
+
+els.textInput.addEventListener("input", event => { state.text = event.target.value; scheduleRender(); });
+els.openFontPickerBtn.addEventListener("click", openFontPicker);
+els.fontPickerModal.addEventListener("click", event => { if (event.target.matches("[data-close-font-modal]")) closeFontPicker(); });
+els.controlTabButtons.forEach(button => button.addEventListener("click", () => activateControlTab(button.dataset.controlTab)));
+els.fontSearch.addEventListener("input", renderFontGrid);
+els.categoryButtons.forEach(button => button.addEventListener("click", () => setCategory(button.dataset.fontCategory)));
+els.basisButtons.forEach(button => button.addEventListener("click", () => {
+  state.basis = button.dataset.sizeBasis;
+  els.basisButtons.forEach(item => { const active = item === button; item.classList.toggle("is-active", active); item.setAttribute("aria-checked", String(active)); });
+  scheduleRender();
+}));
+els.sizePresets.forEach(button => button.addEventListener("click", () => setSize(button.dataset.size)));
+els.customSize.addEventListener("input", event => setSize(event.target.value));
+els.sizeRange.addEventListener("input", event => setSize(event.target.value));
+els.textColor.addEventListener("input", event => { state.color = event.target.value; scheduleRender(); });
+els.fontWeight.addEventListener("change", event => { state.weight = Number(event.target.value); renderFontGrid(); scheduleRender(true); });
+els.viewModeButtons.forEach(button => button.addEventListener("click", () => setViewMode(button.dataset.viewMode)));
+els.productType.addEventListener("change", event => { state.productType = event.target.value; const product = products[state.productType]; state.posXcm = product.defaultX; state.posYcm = product.defaultY; scheduleRender(false, false); });
+els.garmentColor.addEventListener("input", event => { state.garmentColor = event.target.value; scheduleRender(); });
+els.downloadPngBtn.addEventListener("click", downloadPng);
+els.copySpecBtn.addEventListener("click", copySpec);
+els.zoomOutBtn.addEventListener("click", () => setZoom(state.viewScale - .1));
+els.zoomInBtn.addEventListener("click", () => setZoom(state.viewScale + .1));
+els.actualSizeBtn.addEventListener("click", () => setZoom(1));
+els.fitViewBtn.addEventListener("click", fitView);
+els.openCalibrationBtn.addEventListener("click", openCalibration);
+els.calibrationRange.addEventListener("input", event => updateCalibrationPreview(event.target.value));
+els.decreaseCalibration.addEventListener("click", () => nudgeCalibration(-.5));
+els.increaseCalibration.addEventListener("click", () => nudgeCalibration(.5));
+els.saveCalibrationBtn.addEventListener("click", () => {
+  state.calibration = Number(els.calibrationRange.value) / 100;
+  state.isCalibrated = true;
+  storageSet(CALIBRATION_KEY, String(state.calibration));
+  closeCalibration();
+  scheduleRender(false, false);
+  showToast("화면 보정값을 저장했습니다.");
+});
+els.resetCalibrationBtn.addEventListener("click", () => {
+  state.calibration = 1; state.isCalibrated = false; storageRemove(CALIBRATION_KEY); els.calibrationRange.value = "100"; updateCalibrationPreview(100); scheduleRender(false, false);
+});
+els.calibrationModal.addEventListener("click", event => { if (event.target.matches("[data-close-modal]")) closeCalibration(); });
+els.saveProjectBtn.addEventListener("click", saveProject);
+els.loadProjectBtn.addEventListener("click", loadSavedProject);
+els.projectFileInput.addEventListener("change", async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try { const parsed = JSON.parse(await file.text()); applyProject(parsed.project || parsed); showToast("프로젝트 파일을 불러왔습니다."); }
+  catch (_) { showToast("프로젝트 파일을 읽을 수 없습니다.", true); }
+  event.target.value = "";
+});
+els.designHitArea.addEventListener("pointerdown", beginDrag);
+els.designHitArea.addEventListener("pointermove", moveDrag);
+els.designHitArea.addEventListener("pointerup", endDrag);
+els.designHitArea.addEventListener("pointercancel", endDrag);
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && els.fontPickerModal.classList.contains("is-open")) closeFontPicker();
+  else if (event.key === "Escape" && els.calibrationModal.classList.contains("is-open")) closeCalibration();
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key) && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+    event.preventDefault();
+    const amount = event.shiftKey ? 0.5 : 0.1;
+    if (state.viewMode === "mockup") {
+      if (event.key === "ArrowLeft") state.posXcm -= amount;
+      if (event.key === "ArrowRight") state.posXcm += amount;
+      if (event.key === "ArrowUp") state.posYcm -= amount;
+      if (event.key === "ArrowDown") state.posYcm += amount;
+      state.posXcm = round(clamp(state.posXcm, -25, 25), 1);
+      state.posYcm = round(clamp(state.posYcm, -30, 30), 1);
+        } else {
+      if (event.key === "ArrowLeft") state.gridXcm -= amount;
+      if (event.key === "ArrowRight") state.gridXcm += amount;
+      if (event.key === "ArrowUp") state.gridYcm -= amount;
+      if (event.key === "ArrowDown") state.gridYcm += amount;
+    }
+    renderGuides(); renderTextDesign(); renderDimensions();
+  }
+});
+
+window.addEventListener("resize", () => {
+  clearTimeout(window.__dtfResizeTimer);
+  window.__dtfResizeTimer = setTimeout(() => renderAll({ keepViewport: true }), 120);
+});
+
+function checkViewportZoom() {
+  const scale = window.visualViewport?.scale || 1;
+  const warning = Math.abs(scale - 1) > .02;
+  els.accuracyNotice.classList.toggle("is-warning", warning);
+  if (warning) els.accuracyNotice.innerHTML = `<strong>확대 상태 감지</strong><span>브라우저 또는 화면이 확대되어 있습니다. 1:1 실제 크기 확인은 100% 상태에서 진행하세요.</span>`;
+}
+window.visualViewport?.addEventListener("resize", checkViewportZoom);
+
+normalizeState();
+syncControlsFromState();
+renderFontGrid();
+renderWeightOptions();
+checkViewportZoom();
+renderAll({ keepViewport: false });
+  </script>
+</body>
+</html>

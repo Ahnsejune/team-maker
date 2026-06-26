@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DTF 전사 폰트 미리보기 · 실측 크기</title>
+
+<!--
+  ───────────────────────────────────────────────────────────────
+  DTF 전사 폰트 미리보기 페이지 (단일 파일)
+  - 무료 폰트: 한글 10종 + 영문 10종 (전부 Google Fonts / SIL OFL, 상업적 사용 가능)
+  - 핵심 기능: 7/10/20/30cm 등 "실제 출력 크기"로 미리보기
+  - 모니터 보정(신용카드)으로 진짜 cm를 맞출 수 있음
+
+  [개발팀 메모 · 안세준]
+  · 폰트 추가/교체: 아래 KO_FONTS / EN_FONTS 배열 + <head>의 Google Fonts <link> 한 줄만 수정
+  · 보정값(pxPerCm)은 세션 메모리에만 보관합니다. 운영 사이트에서 새로고침해도 유지하려면
+    applyCalibration() / resetCalibration() 안에 localStorage 저장/복원 코드를 추가하면 됩니다.
+  · 다른 페이지에 끼워 넣을 때는 <style>~</style>, <script>~</script>, .dtf-* 마크업을 그대로 복사하세요.
+  ───────────────────────────────────────────────────────────────
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Gowun+Dodum&family=Song+Myung&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&family=Bebas+Neue&family=Pacifico&family=Anton&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#FBFAF7;
+    --ink:#17150F;
+    --ink-2:#6A6557;
+    --ink-3:#9A9486;
+    --line:#E5E0D4;
+    --line-2:#D6D0C2;
+    --press:#E8462B;       /* 히트프레스 오렌지 · 단일 강조색 */
+    --press-deep:#BE361E;
+    --press-soft:#FCEAE4;
+    --card:#FFFFFF;
+    --mono:"Space Mono", ui-monospace, monospace;
+    --disp:"Space Grotesk","Noto Sans KR",sans-serif;
+    --ui:"Noto Sans KR",sans-serif;
+    --r:14px;
+    --shadow:0 1px 0 rgba(23,21,15,.04), 0 10px 30px -18px rgba(23,21,15,.25);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--ui);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .dtf-wrap{max-width:1160px;margin:0 auto;padding:0 22px 80px}
+
+  /* ── header ───────────────────────────────────────── */
+  .dtf-top{
+    border-bottom:1px solid var(--line);
+    padding:26px 0 22px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:38px;height:38px;border-radius:9px;background:var(--ink);color:var(--paper);
+    display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:15px;
+  }
+  .brand-mark span{color:var(--press)}
+  .brand-txt b{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;font-size:17px;display:block;line-height:1.1}
+  .brand-txt small{color:var(--ink-2);font-size:12px}
+  .top-tag{
+    font-family:var(--mono);font-size:11px;color:var(--ink-2);
+    border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;background:#fff;
+  }
+  .top-tag b{color:var(--press)}
+
+  .hero{padding:40px 0 8px}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--press-deep);display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--press);display:inline-block}
+  .hero h1{
+    font-family:var(--disp);font-weight:700;letter-spacing:-.02em;
+    font-size:clamp(30px,5.4vw,52px);line-height:1.04;margin:0 0 16px;
+  }
+  .hero h1 .ko{font-family:var(--ui);font-weight:700}
+  .hero p{max-width:620px;color:var(--ink-2);font-size:15.5px;margin:0}
+
+  .section-h{display:flex;align-items:baseline;gap:14px;margin:54px 0 18px}
+  .section-h .no{font-family:var(--mono);font-size:12px;color:var(--press);padding-top:3px}
+  .section-h h2{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.01em;margin:0}
+  .section-h .ko-h{font-family:var(--ui)}
+  .section-h p{color:var(--ink-2);font-size:13px;margin:0 0 0 auto;max-width:420px;text-align:right}
+
+  /* ── calibration ──────────────────────────────────── */
+  .calib{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:22px;display:grid;grid-template-columns:1.05fr 1fr;gap:26px;box-shadow:var(--shadow);
+  }
+  .calib h3{margin:0 0 6px;font-size:15px}
+  .calib .lead{color:var(--ink-2);font-size:13.5px;margin:0 0 16px}
+  .calib ol{margin:0 0 18px;padding-left:18px;color:var(--ink-2);font-size:13px}
+  .calib ol li{margin:4px 0}
+  .calib .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .slider{flex:1;min-width:160px;accent-color:var(--press);height:24px}
+  .btn{
+    font-family:var(--ui);font-size:13px;font-weight:700;cursor:pointer;
+    border-radius:9px;padding:9px 14px;border:1px solid var(--ink);background:var(--ink);color:#fff;
+    transition:transform .05s ease, background .15s ease;
+  }
+  .btn:hover{background:#000}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line-2)}
+  .btn.ghost:hover{border-color:var(--ink);background:#fff}
+  .calib-readout{font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-top:12px}
+  .calib-readout b{color:var(--ink)}
+  .calib-stagewrap{
+    background:var(--paper);border:1px dashed var(--line-2);border-radius:12px;
+    padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    overflow:auto;
+  }
+  .calib-card{
+    background:linear-gradient(135deg,#2b2b30,#15151a);border-radius:11px;position:relative;
+    box-shadow:0 6px 16px -8px rgba(0,0,0,.6);flex:none;
+  }
+  .calib-card::before{content:"";position:absolute;top:18%;left:0;right:0;height:15%;background:#0c0c0f}
+  .calib-card::after{
+    content:"신용카드 / 교통카드";position:absolute;left:10px;bottom:8px;
+    font-family:var(--mono);font-size:10px;color:#cfcfd6;letter-spacing:.04em;
+  }
+  .calib-hint{font-size:11.5px;color:var(--ink-3);text-align:center}
+
+  /* ── studio (live preview) ────────────────────────── */
+  .studio{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    overflow:hidden;box-shadow:var(--shadow);
+  }
+  .controls{padding:20px 22px;border-bottom:1px solid var(--line);display:grid;gap:16px}
+  .field{display:grid;gap:7px}
+  .field-label{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+  .text-in{
+    width:100%;font-family:var(--ui);font-size:15px;color:var(--ink);
+    border:1px solid var(--line-2);border-radius:10px;padding:11px 13px;background:#fff;
+  }
+  .text-in:focus{outline:2px solid var(--press);outline-offset:1px;border-color:transparent}
+  .ctrl-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px}
+  select.text-in{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px;background-repeat:no-repeat}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    font-family:var(--mono);font-size:12.5px;cursor:pointer;border-radius:8px;padding:8px 11px;
+    border:1px solid var(--line-2);background:#fff;color:var(--ink);transition:all .12s ease;
+  }
+  .chip:hover{border-color:var(--ink)}
+  .chip.on{background:var(--press);border-color:var(--press);color:#fff}
+  .size-custom{display:flex;align-items:center;gap:6px}
+  .size-custom input{width:74px;font-family:var(--mono);text-align:right}
+  .size-custom .u{font-family:var(--mono);font-size:13px;color:var(--ink-2)}
+  .toggle-row{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden}
+  .seg button{
+    font-family:var(--ui);font-size:12.5px;font-weight:700;cursor:pointer;border:0;background:#fff;color:var(--ink-2);padding:8px 13px;
+  }
+  .seg button.on{background:var(--ink);color:#fff}
+  .check{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);cursor:pointer;user-select:none}
+  .check input{width:16px;height:16px;accent-color:var(--press)}
+  .check.disabled{opacity:.4;cursor:not-allowed}
+
+  /* readout spec bar */
+  .spec{
+    display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;
+    padding:13px 22px;background:var(--ink);color:#fff;
+  }
+  .spec .item{font-family:var(--mono);font-size:12.5px;color:#cfcab9}
+  .spec .item b{color:#fff;font-size:14px}
+  .spec .item .hl{color:#FFB59E}
+  .spec .warn{margin-left:auto;font-family:var(--mono);font-size:11px;color:#FFB59E}
+
+  /* stage with rulers */
+  .stage{position:relative;overflow:auto;height:clamp(360px,52vh,560px);background:
+      linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 100% no-repeat;
+      background:repeating-linear-gradient(45deg,#fff,#fff 11px,#fcfbf8 11px,#fcfbf8 22px);}
+  .canvasWrap{position:relative}
+  #hRuler,#vRuler{position:absolute;top:0;left:0;z-index:3;pointer-events:none}
+  #vRuler{}
+  .ruler-corner{
+    position:absolute;top:0;left:0;width:36px;height:26px;z-index:4;background:#fff;
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:9px;color:var(--ink-3);display:grid;place-items:center;
+  }
+  .previewText{
+    position:absolute;white-space:nowrap;line-height:1;color:var(--ink);
+    z-index:2;will-change:font-size;
+  }
+  .stage-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-3);font-size:13px;z-index:1}
+
+  /* ── galleries ────────────────────────────────────── */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .fcard{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 17px;
+    cursor:pointer;transition:border-color .15s ease, transform .06s ease, box-shadow .15s ease;
+    display:flex;flex-direction:column;gap:11px;
+  }
+  .fcard:hover{border-color:var(--ink);box-shadow:var(--shadow)}
+  .fcard:active{transform:translateY(1px)}
+  .fcard.active{border-color:var(--press);box-shadow:0 0 0 1px var(--press)}
+  .fcard-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .fcard-head .name{font-weight:700;font-size:14px}
+  .fcard-head .name small{display:block;font-weight:400;color:var(--ink-2);font-size:11.5px;font-family:var(--mono)}
+  .fcard-head .cat{font-family:var(--mono);font-size:10px;color:var(--press-deep);background:var(--press-soft);border-radius:999px;padding:3px 9px;white-space:nowrap}
+  .fcard-sample{font-size:27px;line-height:1.25;color:var(--ink);overflow:hidden}
+  .fcard-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:9px;margin-top:1px}
+  .fcard-foot .lic{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+  .fcard-foot .use{font-family:var(--mono);font-size:11px;color:var(--press-deep);font-weight:700;opacity:0;transition:opacity .15s ease}
+  .fcard:hover .use{opacity:1}
+
+  /* ── footer ───────────────────────────────────────── */
+  .foot{margin-top:56px;border-top:1px solid var(--line);padding-top:22px;color:var(--ink-2);font-size:12.5px}
+  .foot b{color:var(--ink)}
+  .foot .mono{font-family:var(--mono)}
+
+  /* ── responsive ───────────────────────────────────── */
+  @media (max-width:880px){
+    .calib{grid-template-columns:1fr}
+    .ctrl-grid{grid-template-columns:1fr}
+    .grid{grid-template-columns:1fr}
+    .section-h p{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="dtf-wrap">
+
+  <!-- header -->
+  <header class="dtf-top">
+    <div class="brand">
+      <div class="brand-mark">D<span>T</span>F</div>
+      <div class="brand-txt">
+        <b>전사 폰트 스튜디오</b>
+        <small>한글·영문 무료폰트 실측 미리보기</small>
+      </div>
+    </div>
+    <div class="top-tag">무료폰트 <b>20종</b> · 상업적 사용 가능</div>
+  </header>
+
+  <!-- hero -->
+  <section class="hero">
+    <div class="eyebrow">REAL&nbsp;SIZE&nbsp;PREVIEW</div>
+    <h1>화면에서 <span class="ko">7·10·20·30cm</span><br>실제 크기 그대로 확인하세요</h1>
+    <p>주문 전에 폰트를 고르고, 글자가 전사물에서 몇 cm로 찍히는지 자(ruler) 위에서 바로 봅니다.
+       정확한 cm를 보려면 먼저 모니터를 1분만 보정해 주세요.</p>
+  </section>
+
+  <!-- 01 calibration -->
+  <div class="section-h">
+    <span class="no">01</span>
+    <h2 class="ko-h">모니터 보정</h2>
+    <p>모니터마다 픽셀 밀도가 달라, 보정해야 화면 cm = 실제 cm가 됩니다.</p>
+  </div>
+
+  <section class="calib">
+    <div>
+      <h3>신용카드로 1cm 맞추기</h3>
+      <p class="lead">실제 카드(가로 8.56cm)를 화면 사각형에 겹쳐, 크기가 똑같아질 때까지 슬라이더를 움직이세요.</p>
+      <ol>
+        <li>가지고 있는 카드(신용·체크·교통카드 모두 같은 규격)를 준비합니다.</li>
+        <li>슬라이더를 움직여 오른쪽 사각형을 실제 카드 크기와 일치시킵니다.</li>
+        <li>「이 크기로 보정」을 누르면 모든 미리보기가 실제 cm로 표시됩니다.</li>
+      </ol>
+      <div class="row">
+        <input id="calibSlider" class="slider" type="range" min="220" max="540" step="1" />
+        <button id="calibApply" class="btn">이 크기로 보정</button>
+        <button id="calibReset" class="btn ghost">기본값</button>
+      </div>
+      <div class="calib-readout">현재 기준 &nbsp;1&nbsp;cm = <b id="ppcmOut">37.8</b>&nbsp;px
+        &nbsp;·&nbsp;상태: <b id="calibState">기본값(미보정)</b></div>
+    </div>
+    <div class="calib-stagewrap">
+      <div id="calibCard" class="calib-card"></div>
+      <div class="calib-hint">실제 카드를 화면에 직접 대보세요 · 가로 85.6mm / 세로 53.98mm</div>
+    </div>
+  </section>
+
+  <!-- 02 studio -->
+  <div class="section-h">
+    <span class="no">02</span>
+    <h2 class="ko-h">실측 미리보기</h2>
+    <p>문구·폰트·크기를 고르면 자 위에 실제 출력 크기로 표시됩니다.</p>
+  </div>
+
+  <section class="studio">
+    <div class="controls">
+      <div class="field">
+        <span class="field-label">미리볼 문구</span>
+        <input id="textIn" class="text-in" type="text" value="우리 가게 OPEN 24h" maxlength="40" />
+      </div>
+
+      <div class="ctrl-grid">
+        <div class="field">
+          <span class="field-label">폰트 선택</span>
+          <select id="fontSel" class="text-in"></select>
+        </div>
+        <div class="field">
+          <span class="field-label">크기 (프리셋)</span>
+          <div class="chips" id="sizeChips">
+            <button class="chip" data-cm="7">7cm</button>
+            <button class="chip on" data-cm="10">10cm</button>
+            <button class="chip" data-cm="20">20cm</button>
+            <button class="chip" data-cm="30">30cm</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field-label">직접 입력</span>
+          <div class="size-custom">
+            <input id="sizeIn" class="text-in" type="number" min="1" max="60" step="0.5" value="10" />
+            <span class="u">cm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="field" style="gap:7px">
+          <span class="field-label">크기 기준</span>
+          <div class="seg" id="modeSeg">
+            <button data-mode="width" class="on">가로폭 기준</button>
+            <button data-mode="height">세로높이 기준</button>
+          </div>
+        </div>
+        <label class="check" id="boldWrap">
+          <input id="boldChk" type="checkbox" /> 굵게(Bold)
+        </label>
+      </div>
+    </div>
+
+    <!-- spec readout -->
+    <div class="spec">
+      <span class="item">폰트 <b id="specFont">—</b></span>
+      <span class="item">실제 출력 <b class="hl"><span id="specW">—</span> × <span id="specH">—</span> cm</b></span>
+      <span class="item">기준 <b id="specMode">가로폭</b> <span id="specCm">10</span>cm</span>
+      <span class="warn" id="specWarn"></span>
+    </div>
+
+    <!-- stage -->
+    <div class="stage" id="stage">
+      <div class="canvasWrap" id="canvasWrap">
+        <canvas id="hRuler"></canvas>
+        <canvas id="vRuler"></canvas>
+        <div class="ruler-corner">cm</div>
+        <div class="previewText" id="previewText"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 korean fonts -->
+  <div class="section-h">
+    <span class="no">03</span>
+    <h2 class="ko-h">한글 무료폰트 <span style="font-family:var(--mono);color:var(--press);font-size:14px">10</span></h2>
+    <p>카드를 누르면 위 미리보기에 바로 적용됩니다.</p>
+  </div>
+  <div class="grid" id="koGrid"></div>
+
+  <!-- 04 english fonts -->
+  <div class="section-h">
+    <span class="no">04</span>
+    <h2>English Free Fonts <span style="font-family:var(--mono);color:var(--press);font-size:14px">10</span></h2>
+    <p>카드를 누르면 위 미리보기에 바로 적용됩니다.</p>
+  </div>
+  <div class="grid" id="enGrid"></div>
+
+  <!-- footer -->
+  <footer class="foot">
+    <p><b>라이선스 안내</b> · 수록된 20종은 모두 Google Fonts에서 제공하는 오픈 폰트(대부분 SIL Open Font License)로
+       <b>상업적 사용·전사 출력이 가능</b>합니다. 다만 폰트를 재판매하거나 폰트 파일 자체를 단독 배포하는 것은 금지됩니다.
+       대형 납품·OEM 등 중요한 건은 각 폰트의 공식 라이선스 원문을 한 번 더 확인하시길 권장합니다.</p>
+    <p class="mono" style="color:var(--ink-3);margin-top:10px">TIP · 화면이 작아 30cm가 다 안 보이면 미리보기 영역을 좌우/상하로 스크롤하세요. 보정 후 cm 자가 실제 길이와 일치합니다.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ── 폰트 데이터 ─────────────────────────────────── */
+  const KO_FONTS = [
+    {family:"Noto Sans KR",     ko:"본고딕",        cat:"고딕",   bold:true,  sample:"가나다 한글 ABC 123"},
+    {family:"Nanum Gothic",     ko:"나눔고딕",      cat:"고딕",   bold:true,  sample:"가나다 한글 ABC 123"},
+    {family:"Gowun Dodum",      ko:"고운돋움",      cat:"고딕",   bold:false, sample:"가나다 한글 ABC 123"},
+    {family:"Nanum Myeongjo",   ko:"나눔명조",      cat:"명조",   bold:true,  sample:"가나다 한글 ABC 123"},
+    {family:"Song Myung",       ko:"송명",          cat:"명조",   bold:false, sample:"가나다 한글 ABC 123"},
+    {family:"Black Han Sans",   ko:"검은고딕",      cat:"임팩트", bold:false, sample:"세일 SALE 50%"},
+    {family:"Do Hyeon",         ko:"도현",          cat:"임팩트", bold:false, sample:"오늘만 특가"},
+    {family:"Jua",              ko:"주아",          cat:"둥근",   bold:false, sample:"안녕하세요 :)"},
+    {family:"Gaegu",            ko:"개구",          cat:"손글씨", bold:true,  sample:"손글씨 메모 ♥"},
+    {family:"Nanum Pen Script", ko:"나눔손글씨 펜", cat:"손글씨", bold:false, sample:"감사합니다 :)"}
+  ];
+  const EN_FONTS = [
+    {family:"Roboto",          ko:"로보토",     cat:"Sans",      bold:true,  sample:"Brown Fox 123"},
+    {family:"Open Sans",       ko:"오픈산스",   cat:"Sans",      bold:true,  sample:"Brown Fox 123"},
+    {family:"Lato",            ko:"라토",       cat:"Sans",      bold:true,  sample:"Brown Fox 123"},
+    {family:"Montserrat",      ko:"몬세라트",   cat:"Geometric", bold:true,  sample:"Brown Fox 123"},
+    {family:"Poppins",         ko:"포핀스",     cat:"Geometric", bold:true,  sample:"Brown Fox 123"},
+    {family:"Oswald",          ko:"오스왈드",   cat:"Condensed", bold:true,  sample:"BROWN FOX 123"},
+    {family:"Playfair Display",ko:"플레이페어", cat:"Serif",     bold:true,  sample:"Brown Fox 123"},
+    {family:"Bebas Neue",      ko:"베바스",     cat:"Display",   bold:false, sample:"BROWN FOX 123"},
+    {family:"Anton",           ko:"앤톤",       cat:"Display",   bold:false, sample:"BROWN FOX 123"},
+    {family:"Pacifico",        ko:"파시피코",   cat:"Script",    bold:false, sample:"Brown Fox"}
+  ];
+  const ALL = KO_FONTS.concat(EN_FONTS);
+
+  /* ── 상태 ────────────────────────────────────────── */
+  const DEFAULT_PPCM = 96 / 2.54;      // CSS 기본값(미보정)
+  const CARD_CM = 8.56;                // 카드 가로 실측
+  const state = {
+    ppcm: DEFAULT_PPCM,
+    calibrated: false,
+    font: ALL[0],
+    sizeCm: 10,
+    mode: "width",   // width | height
+    bold: false,
+    text: "우리 가게 OPEN 24h"
+  };
+
+  /* ── DOM ─────────────────────────────────────────── */
+  const $ = (s)=>document.querySelector(s);
+  const stage = $("#stage"), wrap = $("#canvasWrap"), pv = $("#previewText");
+  const hR = $("#hRuler"), vR = $("#vRuler");
+  const HR_H = 26, VR_W = 36, PAD = 26;   // 자 두께 + 여백(px)
+
+  /* ── 폰트 select 채우기 ──────────────────────────── */
+  (function fillSelect(){
+    const sel = $("#fontSel");
+    function group(label, list){
+      const og = document.createElement("optgroup"); og.label = label;
+      list.forEach((f,i)=>{
+        const o = document.createElement("option");
+        o.value = f.family; o.textContent = f.ko + " · " + f.family;
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    }
+    group("한글", KO_FONTS); group("English", EN_FONTS);
+    sel.value = state.font.family;
+    sel.addEventListener("change", ()=>{ setFont(findFont(sel.value)); });
+  })();
+
+  function findFont(fam){ return ALL.find(f=>f.family===fam) || ALL[0]; }
+
+  /* ── 갤러리 카드 ─────────────────────────────────── */
+  function buildGrid(containerSel, list){
+    const c = $(containerSel);
+    list.forEach(f=>{
+      const card = document.createElement("button");
+      card.className = "fcard"; card.type = "button"; card.dataset.family = f.family;
+      card.innerHTML =
+        '<div class="fcard-head">'+
+          '<div class="name">'+f.ko+'<small>'+f.family+'</small></div>'+
+          '<div class="cat">'+f.cat+'</div>'+
+        '</div>'+
+        '<div class="fcard-sample" style="font-family:&quot;'+f.family+'&quot;">'+f.sample+'</div>'+
+        '<div class="fcard-foot"><span class="lic">SIL OFL · 상업적 사용 가능</span>'+
+          '<span class="use">미리보기 적용 →</span></div>';
+      card.addEventListener("click", ()=>{ setFont(f); stage.scrollIntoView({behavior:"smooth",block:"center"}); });
+      c.appendChild(card);
+    });
+  }
+  buildGrid("#koGrid", KO_FONTS);
+  buildGrid("#enGrid", EN_FONTS);
+
+  function markActiveCard(){
+    document.querySelectorAll(".fcard").forEach(el=>{
+      el.classList.toggle("active", el.dataset.family===state.font.family);
+    });
+  }
+
+  /* ── 컨트롤 이벤트 ──────────────────────────────── */
+  $("#textIn").addEventListener("input", e=>{ state.text = e.target.value; render(); });
+
+  $("#sizeChips").addEventListener("click", e=>{
+    const b = e.target.closest(".chip"); if(!b) return;
+    const cm = parseFloat(b.dataset.cm);
+    setSize(cm, true);
+  });
+  $("#sizeIn").addEventListener("input", e=>{
+    const cm = parseFloat(e.target.value);
+    if(cm>0) setSize(cm, false);
+  });
+
+  $("#modeSeg").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    state.mode = b.dataset.mode;
+    document.querySelectorAll("#modeSeg button").forEach(x=>x.classList.toggle("on", x===b));
+    render();
+  });
+
+  $("#boldChk").addEventListener("change", e=>{ state.bold = e.target.checked; render(); });
+
+  function setSize(cm, fromChip){
+    state.sizeCm = cm;
+    document.querySelectorAll("#sizeChips .chip").forEach(c=>{
+      c.classList.toggle("on", parseFloat(c.dataset.cm)===cm);
+    });
+    if(fromChip) $("#sizeIn").value = cm;
+    render();
+  }
+
+  function setFont(f){
+    state.font = f;
+    $("#fontSel").value = f.family;
+    // bold 토글 가용성
+    const bw = $("#boldWrap"), chk = $("#boldChk");
+    if(f.bold){ bw.classList.remove("disabled"); chk.disabled=false; }
+    else{ bw.classList.add("disabled"); chk.disabled=true; chk.checked=false; state.bold=false; }
+    markActiveCard();
+    ensureFont(f).then(render);
+  }
+
+  /* ── 폰트 로딩 보장 후 측정 ─────────────────────── */
+  function ensureFont(f){
+    if(!document.fonts || !document.fonts.load) return Promise.resolve();
+    const jobs = [document.fonts.load('100px "'+f.family+'"')];
+    if(f.bold) jobs.push(document.fonts.load('bold 100px "'+f.family+'"'));
+    return Promise.all(jobs).catch(()=>{});
+  }
+
+  /* ── 보정(신용카드) ─────────────────────────────── */
+  const slider = $("#calibSlider"), card = $("#calibCard");
+  function drawCalibCard(px){
+    card.style.width = px + "px";
+    card.style.height = (px/1.5858) + "px";   // 카드 종횡비 85.6:53.98
+  }
+  function initCalib(){
+    const startPx = Math.round(state.ppcm * CARD_CM);
+    slider.value = startPx; drawCalibCard(startPx);
+  }
+  slider.addEventListener("input", ()=> drawCalibCard(parseFloat(slider.value)));
+  $("#calibApply").addEventListener("click", ()=>{
+    const px = parseFloat(slider.value);
+    state.ppcm = px / CARD_CM; state.calibrated = true;
+    // [개발팀] 운영 지속 저장을 원하면 아래 주석을 사용:
+    // localStorage.setItem("dtf_ppcm", state.ppcm);
+    syncCalibReadout(); render();
+  });
+  $("#calibReset").addEventListener("click", ()=>{
+    state.ppcm = DEFAULT_PPCM; state.calibrated = false;
+    // localStorage.removeItem("dtf_ppcm");
+    initCalib(); syncCalibReadout(); render();
+  });
+  function syncCalibReadout(){
+    $("#ppcmOut").textContent = state.ppcm.toFixed(1);
+    $("#calibState").textContent = state.calibrated ? "보정 완료 ✓" : "기본값(미보정)";
+    $("#calibState").style.color = state.calibrated ? "var(--press-deep)" : "";
+  }
+
+  /* ── 자(ruler) 그리기 ──────────────────────────── */
+  function drawRulers(wrapW, wrapH){
+    const dpr = window.devicePixelRatio || 1;
+    const ppcm = state.ppcm;
+    const css = getComputedStyle(document.documentElement);
+    const cMuted = css.getPropertyValue("--ink-2").trim() || "#6A6557";
+    const cLine  = css.getPropertyValue("--line-2").trim() || "#D6D0C2";
+    const cPress = css.getPropertyValue("--press").trim() || "#E8462B";
+
+    // 가로 자
+    hR.style.width = wrapW+"px"; hR.style.height = HR_H+"px";
+    hR.width = wrapW*dpr; hR.height = HR_H*dpr;
+    let ctx = hR.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,wrapW,HR_H);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,wrapW,HR_H);
+    ctx.fillStyle=cMuted; ctx.strokeStyle=cLine; ctx.lineWidth=1;
+    ctx.font='10px "Space Mono", monospace'; ctx.textBaseline="top";
+    const ox = VR_W + PAD;     // 0cm 위치
+    for(let cm=0; ; cm++){
+      const x = ox + cm*ppcm; if(x>wrapW) break;
+      let t = 6; if(cm%5===0) t=11; if(cm%10===0) t=16;
+      ctx.strokeStyle = (cm===0)? cPress : cLine;
+      ctx.beginPath(); ctx.moveTo(x+.5, HR_H); ctx.lineTo(x+.5, HR_H-t); ctx.stroke();
+      if(cm>0 && cm%5===0){ ctx.fillStyle=cMuted; ctx.fillText(cm, x+2, 2); }
+    }
+    ctx.strokeStyle=cLine; ctx.beginPath(); ctx.moveTo(0,HR_H-.5); ctx.lineTo(wrapW,HR_H-.5); ctx.stroke();
+
+    // 세로 자
+    vR.style.width = VR_W+"px"; vR.style.height = wrapH+"px";
+    vR.width = VR_W*dpr; vR.height = wrapH*dpr;
+    ctx = vR.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,VR_W,wrapH);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,VR_W,wrapH);
+    ctx.fillStyle=cMuted; ctx.strokeStyle=cLine; ctx.lineWidth=1;
+    ctx.font='10px "Space Mono", monospace'; ctx.textBaseline="middle";
+    const oy = HR_H + PAD;
+    for(let cm=0; ; cm++){
+      const y = oy + cm*ppcm; if(y>wrapH) break;
+      let t = 6; if(cm%5===0) t=11; if(cm%10===0) t=16;
+      ctx.strokeStyle = (cm===0)? cPress : cLine;
+      ctx.beginPath(); ctx.moveTo(VR_W, y+.5); ctx.lineTo(VR_W-t, y+.5); ctx.stroke();
+      if(cm>0 && cm%5===0){ ctx.save(); ctx.fillStyle=cMuted;
+        ctx.translate(8, y); ctx.rotate(-Math.PI/2); ctx.fillText(cm, 0, 0); ctx.restore(); }
+    }
+    ctx.strokeStyle=cLine; ctx.beginPath(); ctx.moveTo(VR_W-.5,0); ctx.lineTo(VR_W-.5,wrapH); ctx.stroke();
+  }
+
+  /* ── 렌더(실측 미리보기) ────────────────────────── */
+  function render(){
+    const f = state.font;
+    const txt = (state.text && state.text.trim().length) ? state.text : "미리볼 문구를 입력하세요";
+    pv.style.fontFamily = '"'+f.family+'"';
+    pv.style.fontWeight = state.bold ? 700 : 400;
+    pv.textContent = txt;
+
+    // 기준 100px에서 자연 크기 측정 → 선형 비례로 목표 크기 계산
+    pv.style.left = (VR_W+PAD)+"px"; pv.style.top = (HR_H+PAD)+"px";
+    pv.style.fontSize = "100px";
+    const r0 = pv.getBoundingClientRect();
+    const natW = Math.max(1, r0.width), natH = Math.max(1, r0.height);
+
+    const targetPx = state.sizeCm * state.ppcm;
+    const scale = (state.mode==="width") ? targetPx/natW : targetPx/natH;
+    const finalSize = 100 * scale;
+    pv.style.fontSize = finalSize + "px";
+
+    const finalW = natW*scale, finalH = natH*scale;
+    const wCm = finalW/state.ppcm, hCm = finalH/state.ppcm;
+
+    // 캔버스 영역 크기(최소 = 스테이지 보이는 영역)
+    const needW = VR_W+PAD + finalW + PAD;
+    const needH = HR_H+PAD + finalH + PAD;
+    const wrapW = Math.max(stage.clientWidth,  Math.ceil(needW));
+    const wrapH = Math.max(stage.clientHeight, Math.ceil(needH));
+    wrap.style.width = wrapW+"px"; wrap.style.height = wrapH+"px";
+    drawRulers(wrapW, wrapH);
+
+    // 스펙 readout
+    $("#specFont").textContent = f.ko + " (" + f.family + ")";
+    $("#specW").textContent = wCm.toFixed(1);
+    $("#specH").textContent = hCm.toFixed(1);
+    $("#specMode").textContent = (state.mode==="width") ? "가로폭" : "세로높이";
+    $("#specCm").textContent = (state.sizeCm % 1 === 0) ? state.sizeCm : state.sizeCm.toFixed(1);
+
+    const warn = $("#specWarn");
+    if(!state.calibrated) warn.textContent = "⚠ 미보정 상태 · 정확한 cm는 01에서 보정";
+    else if(Math.max(finalW,finalH) > Math.max(wrapW,wrapH)) warn.textContent = "↔ 스크롤하여 전체 보기";
+    else warn.textContent = "";
+  }
+
+  /* ── 초기화 ─────────────────────────────────────── */
+  function init(){
+    initCalib(); syncCalibReadout();
+    setFont(state.font);              // bold 토글/카드 활성 + 첫 렌더
+    window.addEventListener("resize", ()=>render());
+    if(document.fonts && document.fonts.ready){ document.fonts.ready.then(render); }
+  }
+  init();
+})();
+</script>
+</body>
+</html>
