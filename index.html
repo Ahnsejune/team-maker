@@ -509,6 +509,42 @@
       border-radius: 0;
     }
 
+    .hero-video-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  background: #000;
+}
+
+/* 세로형 9:16 영상을 프레임에 꽉 차게 확대 */
+.hero-video-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 108%;
+  aspect-ratio: 9 / 16;
+  transform: translate(-50%, -50%);
+}
+
+.hero-video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+}
+
+/* 마우스 조작 및 유튜브 인터페이스 노출 방지 */
+.hero-video-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: transparent;
+  pointer-events: auto;
+}
+
     /* 마킹 디자인 레이아웃 */
     .shirt-marking {
       display: none;
@@ -2902,8 +2938,18 @@
             </div>
 
             <!-- 실사형 티셔츠 이미지 -->
-            <div class="shirt-svg-wrap">
-              <img src="mokup_01.png"/>
+            <div class="hero-video-wrap">
+              <div class="hero-video-frame">
+                <iframe
+                  src="https://www.youtube.com/embed/7B3f4PKnsnI?autoplay=1&amp;mute=1&amp;loop=1&amp;playlist=7B3f4PKnsnI&amp;controls=0&amp;disablekb=1&amp;fs=0&amp;iv_load_policy=3&amp;playsinline=1&amp;rel=0"
+                  title="팀메이커(Team Maker)"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  loading="eager"
+                  tabindex="-1"
+                  aria-hidden="true">
+                </iframe>
+              </div>
             </div>
 
             <div class="mockup-bottom-card">
